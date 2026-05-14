@@ -35,15 +35,15 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Image 
-                source={require('../../assets/logo.png')} 
+              <Image
+                source={require('../../assets/logo.png')}
                 style={styles.logo}
                 resizeMode="contain"
               />
@@ -80,8 +80,8 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }) => {
               </View>
             </View>
 
-            <TouchableOpacity 
-              style={[styles.loginBtn, SHADOW.small]} 
+            <TouchableOpacity
+              style={[styles.loginBtn, SHADOW.small]}
               onPress={handleLogin}
               disabled={loading}
             >
@@ -115,11 +115,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: SPACING.xl,
-    paddingTop: 40,
+    justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   logoContainer: {
     width: SCREEN_WIDTH * 0.9,
