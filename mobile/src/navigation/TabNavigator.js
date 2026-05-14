@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, FileText, Package, BarChart2, MoreHorizontal, MessageSquare } from 'lucide-react-native';
 import { COLORS } from '../styles/theme';
 import { scale, verticalScale, moderateScale } from '../utils/responsive';
-import { BlurView } from 'expo-blur';
+
 import { Platform, StyleSheet, View } from 'react-native';
 
 // Screens
