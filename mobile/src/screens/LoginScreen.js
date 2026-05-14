@@ -118,14 +118,14 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 60,
   },
   logoContainer: {
-    width: 180,
-    height: 180,
+    width: 300,
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 0,
+    marginBottom: 24,
   },
   logo: {
     width: '100%',
@@ -135,7 +135,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textMuted,
     textAlign: 'center',
-    marginTop: -10,
+    fontWeight: '600',
+    letterSpacing: 1.5,
   },
   form: {
     gap: 20,

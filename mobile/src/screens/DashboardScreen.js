@@ -73,7 +73,7 @@ const DashboardScreen = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Image 
               source={require('../../assets/logo.png')} 
-              style={{ width: 32, height: 32 }}
+              style={{ width: 64, height: 64 }}
               resizeMode="contain"
             />
             <Text style={styles.welcomeText}>Hello, {userName}</Text>

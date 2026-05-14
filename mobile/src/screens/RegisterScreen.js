@@ -154,24 +154,25 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 48,
   },
   logoContainer: {
-    width: 160,
-    height: 160,
+    width: 250,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 20,
   },
   logo: {
     width: '100%',
     height: '100%',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: COLORS.textMuted,
     textAlign: 'center',
-    marginTop: -10,
+    fontWeight: '600',
+    letterSpacing: 1.2,
   },
   form: {
     gap: 16,
