@@ -2,12 +2,12 @@ import { Platform } from 'react-native';
 
 // ─── API Configuration ────────────────────────────────────────────────────────
 // XAMPP Apache serves on port 80. Laravel public folder is at:
-// http://192.168.1.10/ProGst/backend/public
+// http://192.168.1.2/ProGst/backend/public
 //
 // To use php artisan serve instead, run:
-//   php artisan serve --host=192.168.1.4 --port=8001
+//   php artisan serve --host=192.168.1.2 --port=8001
 // and revert PORT back to '8001' and BASE_PATH to ''
-export const HOSTNAME = '192.168.1.4';
+export const HOSTNAME = '192.168.1.2';
 export const PORT = '80';           // XAMPP Apache port
 export const BASE_PATH = '/ProGst/backend/public'; // path under htdocs
 

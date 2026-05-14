@@ -31,6 +31,11 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
       return;
     }
 
+    if (password.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await register(formData);
@@ -38,8 +43,19 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
       onRegisterSuccess(response.data.user);
     } catch (error) {
-      const message = error.response?.data?.email?.[0] || 'Registration failed. Please try again.';
-      Alert.alert('Error', message);
+      let message = 'Registration failed. Please try again.';
+      
+      if (error.response?.data?.errors) {
+        // Laravel default validation structure
+        const errors = error.response.data.errors;
+        message = Object.values(errors).flat().join('\n');
+      } else if (error.response?.data) {
+        // Flattened structure if the API returns direct keys
+        const data = error.response.data;
+        message = Object.values(data).filter(v => Array.isArray(v)).flat().join('\n') || data.message || message;
+      }
+      
+      Alert.alert('Registration Error', message);
     } finally {
       setLoading(false);
     }

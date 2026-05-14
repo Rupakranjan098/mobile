@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, ScrollView, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Alert, RefreshControl, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, FileText, Plus, CheckCircle, Clock, AlertCircle, List } from 'lucide-react-native';
+import { Search, FileText, Plus, CheckCircle, Clock, AlertCircle, List, Share2, MessageCircle } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { getInvoices } from '../services/api';
 import * as WebBrowser from 'expo-web-browser';
@@ -75,6 +75,24 @@ const InvoicesScreen = ({ navigation }) => {
     }
   };
 
+  const handleWhatsAppShare = (item) => {
+    const url = `${SERVER_URL}/invoices/${item.id}/print`;
+    const message = `*ProGst Invoice Sharing*\n\nHello *${item.customer?.name || 'Customer'}*,\n\nYour invoice *${item.invoice_number}* is ready.\n\n*Amount:* ₹ ${parseFloat(item.total_amount).toLocaleString()}\n*Status:* ${item.status}\n\nView/Download Invoice: ${url}\n\nThank you for your business!`;
+    
+    const phone = item.customer?.phone ? item.customer.phone.replace(/\D/g, '') : '';
+    const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}${phone ? `&phone=${phone}` : ''}`;
+    
+    Linking.canOpenURL(whatsappUrl).then(supported => {
+      if (supported) {
+        Linking.openURL(whatsappUrl);
+      } else {
+        // Fallback to web link if app not installed
+        const webWhatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        Linking.openURL(webWhatsappUrl);
+      }
+    }).catch(err => console.error('An error occurred', err));
+  };
+
   if (loading && !refreshing) {
     return (
       <View style={[styles.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -87,6 +105,7 @@ const InvoicesScreen = ({ navigation }) => {
     <TouchableOpacity 
       style={[styles.invoiceItem, SHADOW.small]} 
       onPress={() => handlePrint(item.id)}
+      activeOpacity={0.7}
     >
       <View style={styles.invIcon}>
         <FileText size={20} color={COLORS.primary} />
@@ -102,7 +121,19 @@ const InvoicesScreen = ({ navigation }) => {
             <Text style={[styles.badgeText, styles[`badgeText${item.status}`]]}>{item.status}</Text>
           </View>
         </View>
-        <Text style={styles.invDate}>{item.date}</Text>
+        <View style={styles.invFooter}>
+          <Text style={styles.invDate}>{item.date}</Text>
+          <TouchableOpacity 
+            style={styles.shareIconBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleWhatsAppShare(item);
+            }}
+          >
+            <MessageCircle size={18} color="#22c55e" />
+            <Text style={styles.shareLabel}>Share</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -348,8 +379,27 @@ const styles = StyleSheet.create({
   invDate: {
     fontSize: moderateScale(11),
     color: '#64748b',
-    marginTop: verticalScale(4),
     fontWeight: '700',
+  },
+  invFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: verticalScale(4),
+  },
+  shareIconBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    paddingHorizontal: scale(10),
+    paddingVertical: scale(4),
+    borderRadius: 8,
+    gap: scale(4),
+  },
+  shareLabel: {
+    fontSize: moderateScale(11),
+    color: '#22c55e',
+    fontWeight: '800',
   },
   badge: {
     paddingHorizontal: scale(10),
