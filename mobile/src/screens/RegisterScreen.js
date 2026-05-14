@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, User } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { register } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
@@ -157,11 +159,11 @@ const styles = StyleSheet.create({
     marginBottom: 60,
   },
   logoContainer: {
-    width: 300,
-    height: 100,
+    width: SCREEN_WIDTH * 0.8,
+    height: 140,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   logo: {
     width: '100%',
@@ -173,6 +175,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
     letterSpacing: 1.2,
+    marginTop: -10,
   },
   form: {
     gap: 16,
