@@ -9,19 +9,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Dimensions,
   Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Send, Bot, User, BarChart2, PieChart, Sparkles, ChevronDown } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { scale, moderateScale, verticalScale } from '../utils/responsive';
+import { scale, moderateScale, verticalScale, SCREEN_WIDTH } from '../utils/responsive';
 import { askAI } from '../services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
+
 
 const AIChatScreen = () => {
   const insets = useSafeAreaInsets();
@@ -100,7 +99,7 @@ const AIChatScreen = () => {
       return (
         <LineChart
           data={data}
-          width={width * 0.7}
+          width={SCREEN_WIDTH * 0.7}
           height={180}
           chartConfig={chartConfig}
           bezier
@@ -111,7 +110,7 @@ const AIChatScreen = () => {
       return (
         <BarChart
           data={data}
-          width={width * 0.7}
+          width={SCREEN_WIDTH * 0.7}
           height={180}
           chartConfig={chartConfig}
           style={styles.chart}

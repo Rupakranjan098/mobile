@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, ScrollView, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Alert, RefreshControl, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, FileText, Plus, CheckCircle, Clock, AlertCircle, List } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
@@ -9,7 +9,7 @@ import { SERVER_URL } from '../config';
 import { scale, moderateScale, verticalScale } from '../utils/responsive';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 
 // Filter config: label, status value (matches DB), colors, icon
 const FILTERS = [

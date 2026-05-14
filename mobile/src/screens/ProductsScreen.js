@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert, Modal, KeyboardAvoidingView, Platform, Animated, Vibration, Dimensions, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, Alert, Modal, KeyboardAvoidingView, Platform, Animated, Vibration, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Plus, Package, Scan, X, Trash2 } from 'lucide-react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { getProducts, getProductByBarcode, deleteProduct, createProduct } from '../services/api';
-import { scale, moderateScale, verticalScale } from '../utils/responsive';
+import { scale, moderateScale, verticalScale, SCREEN_WIDTH } from '../utils/responsive';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 
 const ProductsScreen = () => {
   const insets = useSafeAreaInsets();

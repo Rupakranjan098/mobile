@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Download } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
@@ -9,8 +9,9 @@ import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { SERVER_URL } from '../config';
+import { SCREEN_WIDTH } from '../utils/responsive';
 
-const { width } = Dimensions.get('window');
+
 
 const ReportsScreen = () => {
   const [data, setData] = useState(null);
@@ -105,7 +106,7 @@ const ReportsScreen = () => {
         {activeTab === 'GST' && reportsData.gstData?.length > 0 && (
           <PieChart
             data={reportsData.gstData.map(d => ({ ...d, legendFontColor: COLORS.textMuted, legendFontSize: 12 }))}
-            width={width - 48}
+            width={SCREEN_WIDTH - 48}
             height={180}
             chartConfig={{
               color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
@@ -126,7 +127,7 @@ const ReportsScreen = () => {
               legendFontColor: COLORS.textMuted, 
               legendFontSize: 12 
             }))}
-            width={width - 48}
+            width={SCREEN_WIDTH - 48}
             height={180}
             chartConfig={{
               color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
@@ -147,7 +148,7 @@ const ReportsScreen = () => {
               legendFontColor: COLORS.textMuted, 
               legendFontSize: 12 
             }))}
-            width={width - 48}
+            width={SCREEN_WIDTH - 48}
             height={180}
             chartConfig={{
               color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,

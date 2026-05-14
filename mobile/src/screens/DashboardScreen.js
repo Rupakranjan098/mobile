@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TrendingUp, TrendingDown, ChevronRight, Sparkles } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 
-const { width } = Dimensions.get('window');
+
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
@@ -146,7 +146,7 @@ const DashboardScreen = () => {
                     data: dashboardData.salesChart.map(d => d.value)
                   }]
                 }}
-                width={width - 72}
+                width={SCREEN_WIDTH - 72}
                 height={180}
                 chartConfig={{
                   backgroundColor: 'transparent',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Platform, Switch, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
@@ -10,7 +10,7 @@ import { getBusinessProfile, updateBusinessProfile, getMe, updateProfile, getSub
 import { LinearGradient } from 'expo-linear-gradient';
 import { scale, moderateScale, verticalScale } from '../utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 
 const SettingsItem = ({ icon: Icon, label, value, color = '#94a3b8', onClick }) => (
   <TouchableOpacity style={styles.settingsItem} onPress={onClick}>
