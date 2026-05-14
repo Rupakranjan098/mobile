@@ -19,6 +19,7 @@ import { LineChart, BarChart } from 'react-native-chart-kit';
 import { scale, moderateScale, verticalScale } from '../utils/responsive';
 import { askAI } from '../services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -84,21 +85,22 @@ const AIChatScreen = () => {
 
   const renderChart = (type, data) => {
     const chartConfig = {
-      backgroundColor: '#ffffff',
-      backgroundGradientFrom: '#ffffff',
-      backgroundGradientTo: '#ffffff',
+      backgroundColor: 'transparent',
+      backgroundGradientFrom: COLORS.card,
+      backgroundGradientTo: COLORS.card,
       decimalPlaces: 0,
       color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
+      labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
       style: { borderRadius: 16 },
       propsForDots: { r: "4", strokeWidth: "2", stroke: "#fff" },
+      propsForBackgroundLines: { strokeDasharray: "", stroke: 'rgba(255,255,255,0.05)' }
     };
 
     if (type === 'line') {
       return (
         <LineChart
           data={data}
-          width={width * 0.75}
+          width={width * 0.7}
           height={180}
           chartConfig={chartConfig}
           bezier
@@ -109,7 +111,7 @@ const AIChatScreen = () => {
       return (
         <BarChart
           data={data}
-          width={width * 0.75}
+          width={width * 0.7}
           height={180}
           chartConfig={chartConfig}
           style={styles.chart}
@@ -121,157 +123,169 @@ const AIChatScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <View style={styles.headerTitleContainer}>
-          <View style={styles.botIconWrapper}>
-            <Bot size={20} color="#fff" />
-          </View>
-          <View>
-            <Text style={styles.headerTitle}>AI Business Assistant</Text>
-            <View style={styles.onlineStatus}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>Online & Learning</Text>
+    <View style={styles.mainContainer}>
+      <LinearGradient
+        colors={['#0f172a', '#1e293b']}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      {/* Decorative background spheres (Balls) */}
+      <View style={[styles.decorCircle, { top: -50, right: -100, width: 300, height: 300, backgroundColor: 'rgba(34, 197, 94, 0.1)' }]} />
+      <View style={[styles.decorCircle, { bottom: 200, left: -150, width: 350, height: 350, backgroundColor: 'rgba(30, 64, 175, 0.08)' }]} />
+
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <View style={styles.headerTitleContainer}>
+            <View style={styles.botIconWrapper}>
+              <Bot size={20} color="#fff" />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>AI Assistant</Text>
+              <View style={styles.onlineStatus}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.onlineText}>Intelligent Analysis</Text>
+              </View>
             </View>
           </View>
+          <TouchableOpacity style={styles.headerAction}>
+            <Sparkles size={20} color={COLORS.primary} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.headerAction}>
-          <Sparkles size={20} color={COLORS.primary} />
-        </TouchableOpacity>
-      </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.chatContainer}
-          contentContainerStyle={styles.chatContent}
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.container}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
         >
-          {messages.map((msg) => (
-            <View
-              key={msg.id}
-              style={[
-                styles.messageWrapper,
-                msg.type === 'user' ? styles.userMessageWrapper : styles.botMessageWrapper
-              ]}
-            >
-              {msg.type === 'bot' && (
-                <View style={styles.msgAvatar}>
-                  <Bot size={14} color={COLORS.primary} />
-                </View>
-              )}
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.chatContainer}
+            contentContainerStyle={styles.chatContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {messages.map((msg) => (
               <View
+                key={msg.id}
                 style={[
-                  styles.messageBubble,
-                  msg.type === 'user' ? styles.userBubble : styles.botBubble,
-                  SHADOW.small
+                  styles.messageWrapper,
+                  msg.type === 'user' ? styles.userMessageWrapper : styles.botMessageWrapper
                 ]}
               >
-                <Text
-                  style={[
-                    styles.messageText,
-                    msg.type === 'user' ? styles.userMessageText : styles.botMessageText
-                  ]}
-                >
-                  {msg.text}
-                </Text>
-
-                {msg.chartData && (
-                  <View style={styles.chartWrapper}>
-                    {renderChart(msg.chartType, msg.chartData)}
+                {msg.type === 'bot' && (
+                  <View style={styles.msgAvatar}>
+                    <Bot size={14} color="#fff" />
                   </View>
                 )}
+                <View
+                  style={[
+                    styles.messageBubble,
+                    msg.type === 'user' ? styles.userBubble : styles.botBubble,
+                    SHADOW.small
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.messageText,
+                      msg.type === 'user' ? styles.userMessageText : styles.botMessageText
+                    ]}
+                  >
+                    {msg.text}
+                  </Text>
 
-                <Text style={[
-                  styles.timestamp,
-                  msg.type === 'user' ? styles.userTimestamp : styles.botTimestamp
-                ]}>
-                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
+                  {msg.chartData && (
+                    <View style={styles.chartWrapper}>
+                      {renderChart(msg.chartType, msg.chartData)}
+                    </View>
+                  )}
+
+                  <Text style={[
+                    styles.timestamp,
+                    msg.type === 'user' ? styles.userTimestamp : styles.botTimestamp
+                  ]}>
+                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </View>
               </View>
+            ))}
+
+            {isTyping && (
+              <View style={styles.botMessageWrapper}>
+                <View style={styles.msgAvatar}>
+                  <Bot size={14} color="#fff" />
+                </View>
+                <View style={[styles.messageBubble, styles.botBubble, styles.typingBubble]}>
+                  <ActivityIndicator size="small" color={COLORS.primary} />
+                </View>
+              </View>
+            )}
+          </ScrollView>
+
+          <View style={[styles.inputArea, { paddingBottom: insets.bottom > 0 ? insets.bottom : SPACING.md }]}>
+            <View style={styles.suggestionsContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <TouchableOpacity
+                  style={styles.suggestionChip}
+                  onPress={() => handleSend("Profit analysis")}
+                >
+                  <BarChart2 size={14} color={COLORS.primary} />
+                  <Text style={styles.suggestionText}>Profit Analysis</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.suggestionChip}
+                  onPress={() => handleSend("Who are my top customers?")}
+                >
+                  <User size={14} color={COLORS.primary} />
+                  <Text style={styles.suggestionText}>Top Customers</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.suggestionChip}
+                  onPress={() => handleSend("Show my sales chart")}
+                >
+                  <BarChart2 size={14} color={COLORS.primary} />
+                  <Text style={styles.suggestionText}>Sales Chart</Text>
+                </TouchableOpacity>
+              </ScrollView>
             </View>
-          ))}
 
-          {isTyping && (
-            <View style={styles.botMessageWrapper}>
-              <View style={styles.msgAvatar}>
-                <Bot size={14} color={COLORS.primary} />
-              </View>
-              <View style={[styles.messageBubble, styles.botBubble, styles.typingBubble]}>
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              </View>
+            <View style={styles.inputRow}>
+              <TextInput
+                style={styles.input}
+                placeholder="Ask your assistant..."
+                placeholderTextColor="#94a3b8"
+                value={inputText}
+                onChangeText={setInputText}
+                multiline
+                maxLength={500}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendBtn,
+                  !inputText.trim() && styles.sendBtnDisabled
+                ]}
+                onPress={handleSend}
+                disabled={!inputText.trim()}
+              >
+                <Send size={20} color="#fff" />
+              </TouchableOpacity>
             </View>
-          )}
-        </ScrollView>
-
-        <View style={[styles.inputArea, { paddingBottom: insets.bottom > 0 ? insets.bottom : SPACING.md }]}>
-          <View style={styles.suggestionsContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <TouchableOpacity
-                style={styles.suggestionChip}
-                onPress={() => handleSend("Profit analysis")}
-              >
-                <BarChart2 size={14} color={COLORS.primary} />
-                <Text style={styles.suggestionText}>Profit Analysis</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.suggestionChip}
-                onPress={() => handleSend("Who are my top customers?")}
-              >
-                <User size={14} color={COLORS.primary} />
-                <Text style={styles.suggestionText}>Top Customers</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.suggestionChip}
-                onPress={() => handleSend("Show my sales chart")}
-              >
-                <BarChart2 size={14} color={COLORS.primary} />
-                <Text style={styles.suggestionText}>Sales Chart</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.suggestionChip}
-                onPress={() => handleSend("Expense analysis")}
-              >
-                <PieChart size={14} color={COLORS.primary} />
-                <Text style={styles.suggestionText}>Expense Analysis</Text>
-              </TouchableOpacity>
-            </ScrollView>
           </View>
-
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              placeholder="Ask anything about your business..."
-              value={inputText}
-              onChangeText={setInputText}
-              multiline
-              maxLength={500}
-            />
-            <TouchableOpacity
-              style={[
-                styles.sendBtn,
-                !inputText.trim() && styles.sendBtnDisabled
-              ]}
-              onPress={handleSend}
-              disabled={!inputText.trim()}
-            >
-              <Send size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+  },
+  decorCircle: {
+    position: 'absolute',
+    borderRadius: 999,
   },
   header: {
     flexDirection: 'row',
@@ -279,9 +293,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
   headerTitleContainer: {
     flexDirection: 'row',
@@ -298,8 +312,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: moderateScale(16),
-    fontWeight: '700',
-    color: COLORS.textMain,
+    fontWeight: '800',
+    color: '#fff',
   },
   onlineStatus: {
     flexDirection: 'row',
@@ -314,14 +328,14 @@ const styles = StyleSheet.create({
   },
   onlineText: {
     fontSize: moderateScale(10),
-    color: COLORS.textMuted,
-    fontWeight: '600',
+    color: '#94a3b8',
+    fontWeight: '700',
   },
   headerAction: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -349,24 +363,27 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   msgAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary + '20',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 4,
   },
   messageBubble: {
     padding: SPACING.md,
-    borderRadius: 20,
+    borderRadius: 24,
+    borderWidth: 1,
   },
   botBubble: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(30, 41, 59, 0.7)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderTopLeftRadius: 4,
   },
   userBubble: {
     backgroundColor: COLORS.primary,
+    borderColor: 'transparent',
     borderTopRightRadius: 4,
   },
   messageText: {
@@ -374,42 +391,46 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   botMessageText: {
-    color: COLORS.textMain,
+    color: '#f1f5f9',
   },
   userMessageText: {
     color: '#fff',
+    fontWeight: '500',
   },
   chartWrapper: {
     marginTop: 12,
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
+    backgroundColor: 'rgba(15, 23, 42, 0.3)',
+    borderRadius: 16,
     padding: 8,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   chart: {
     marginVertical: 8,
-    borderRadius: 12,
+    borderRadius: 16,
   },
   timestamp: {
     fontSize: moderateScale(9),
     marginTop: 4,
     alignSelf: 'flex-end',
+    fontWeight: '700',
   },
   botTimestamp: {
-    color: COLORS.textMuted,
+    color: '#64748b',
   },
   userTimestamp: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.6)',
   },
   typingBubble: {
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
   inputArea: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1e293b',
     padding: SPACING.md,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   suggestionsContainer: {
     marginBottom: 12,
@@ -418,18 +439,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: RADIUS.full,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   suggestionText: {
     fontSize: moderateScale(12),
-    color: COLORS.textMain,
-    fontWeight: '600',
+    color: '#e2e8f0',
+    fontWeight: '700',
   },
   inputRow: {
     flexDirection: 'row',
@@ -438,15 +459,15 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     borderRadius: 24,
     paddingHorizontal: 20,
     paddingVertical: 12,
     fontSize: moderateScale(14),
     maxHeight: 100,
-    color: COLORS.textMain,
+    color: '#fff',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   sendBtn: {
     width: 48,
@@ -455,9 +476,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 4,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   sendBtnDisabled: {
-    backgroundColor: '#cbd5e1',
+    backgroundColor: 'rgba(148, 163, 184, 0.2)',
   }
 });
 
