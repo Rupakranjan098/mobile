@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, User, UserPlus } from 'lucide-react-native';
+import { Mail, Lock, User } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { register } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -50,10 +50,14 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <UserPlus size={40} color={COLORS.primary} />
+            <Image 
+              source={require('../../assets/logo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Start managing your business GST easily</Text>
+          <Text style={styles.title}>Join ProGst</Text>
+          <Text style={styles.subtitle}>GST BILLING MADE EASY</Text>
         </View>
 
         <View style={styles.form}>
@@ -154,13 +158,15 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: COLORS.primaryLight,
+    width: 100,
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     fontSize: 28,

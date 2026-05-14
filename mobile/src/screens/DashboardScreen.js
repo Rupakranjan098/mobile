@@ -69,16 +69,21 @@ const DashboardScreen = () => {
         }
       >
       <View style={styles.header}>
-        <View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={styles.welcomeText}>Hello, {userName} 👋</Text>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Image 
+              source={require('../../assets/logo.png')} 
+              style={{ width: 32, height: 32 }}
+              resizeMode="contain"
+            />
+            <Text style={styles.welcomeText}>Hello, {userName}</Text>
             {user?.subscription_plan && (
               <View style={styles.planBadge}>
                 <Text style={styles.planBadgeText}>{user.subscription_plan.name}</Text>
               </View>
             )}
           </View>
-          <Text style={styles.subText}>Here's what's happening with your business</Text>
+          <Text style={styles.subText}>GST BILLING MADE EASY</Text>
         </View>
         <View style={styles.headerActions}>
 
