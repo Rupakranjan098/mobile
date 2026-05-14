@@ -154,14 +154,14 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 60,
   },
   logoContainer: {
-    width: 250,
-    height: 80,
+    width: 300,
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   logo: {
     width: '100%',

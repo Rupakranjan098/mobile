@@ -118,11 +118,11 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: 80,
   },
   logoContainer: {
-    width: 300,
-    height: 100,
+    width: 350,
+    height: 120,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
