@@ -83,10 +83,8 @@ const DashboardScreen = () => {
               </View>
             )}
           </View>
-          </View>
         </View>
         <View style={styles.headerActions}>
-
           <View style={styles.avatar}>
             <Image
               source={{ uri: `https://ui-avatars.com/api/?name=${userName}&background=22c55e&color=fff` }}
