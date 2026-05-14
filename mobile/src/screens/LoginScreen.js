@@ -119,14 +119,14 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: 20,
   },
   logoContainer: {
     width: SCREEN_WIDTH * 0.9,
     height: 180,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 0,
   },
   logo: {
     width: '100%',
