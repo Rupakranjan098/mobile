@@ -152,10 +152,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: SPACING.xl,
+    paddingTop: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   logoContainer: {
     width: SCREEN_WIDTH * 0.8,
