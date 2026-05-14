@@ -56,7 +56,6 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.title}>Join ProGst</Text>
           <Text style={styles.subtitle}>GST BILLING MADE EASY</Text>
         </View>
 
@@ -158,26 +157,21 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoContainer: {
-    width: 100,
-    height: 100,
+    width: 160,
+    height: 160,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   logo: {
     width: '100%',
     height: '100%',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: COLORS.textMain,
-    marginBottom: 8,
-  },
   subtitle: {
     fontSize: 14,
     color: COLORS.textMuted,
     textAlign: 'center',
+    marginTop: -10,
   },
   form: {
     gap: 16,
