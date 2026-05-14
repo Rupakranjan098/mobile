@@ -48,7 +48,6 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }) => {
                 resizeMode="contain"
               />
             </View>
-            <Text style={styles.subtitle}>GST BILLING MADE EASY</Text>
           </View>
 
           <View style={styles.form}>

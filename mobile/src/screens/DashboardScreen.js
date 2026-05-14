@@ -83,7 +83,7 @@ const DashboardScreen = () => {
               </View>
             )}
           </View>
-          <Text style={styles.subText}>GST BILLING MADE EASY</Text>
+          </View>
         </View>
         <View style={styles.headerActions}>
 
