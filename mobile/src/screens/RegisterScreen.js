@@ -52,9 +52,9 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
       />
       
       {/* Decorative background circles (Balls) */}
-      <View style={[styles.decorCircle, { top: -100, left: -150, width: 450, height: 450, backgroundColor: 'rgba(34, 197, 94, 0.15)' }]} />
-      <View style={[styles.decorCircle, { top: 250, right: -200, width: 400, height: 400, backgroundColor: 'rgba(30, 64, 175, 0.12)' }]} />
-      <View style={[styles.decorCircle, { bottom: -150, left: -100, width: 350, height: 350, backgroundColor: 'rgba(34, 197, 94, 0.08)' }]} />
+      <View style={[styles.decorCircle, { top: -80, left: -120, width: 400, height: 400, backgroundColor: 'rgba(34, 197, 94, 0.15)' }]} />
+      <View style={[styles.decorCircle, { top: 200, right: -150, width: 350, height: 350, backgroundColor: 'rgba(30, 64, 175, 0.12)' }]} />
+      <View style={[styles.decorCircle, { bottom: -120, left: -100, width: 300, height: 300, backgroundColor: 'rgba(34, 197, 94, 0.08)' }]} />
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView 
@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingTop: 20, // Reduced top padding
     paddingBottom: 40,
-    justifyContent: 'center',
   },
   decorCircle: {
     position: 'absolute',
@@ -192,14 +192,14 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 20, // Tightened spacing
   },
   logoContainer: {
     width: SCREEN_WIDTH * 0.7,
-    height: 100,
+    height: 100, // Balanced height
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   logo: {
     width: '100%',
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: '#94a3b8',
-    marginTop: 6,
+    marginTop: 4,
     textAlign: 'center',
   },
   glassCard: {
