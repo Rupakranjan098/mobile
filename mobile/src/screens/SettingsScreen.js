@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Platform, Switch } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Check, Zap, Crown, Target, Rocket, ArrowRight, Moon, Sun } from 'lucide-react-native';
+import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Moon, Sun } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SERVER_URL } from '../config';
 import * as ImagePicker from 'expo-image-picker';
-import { getBusinessProfile, updateBusinessProfile, getMe, updateProfile, getSubscriptionPlans, subscribe, syncData, getAppSettings, updateAppSettings, getFAQs, getSupportContact } from '../services/api';
+import { getBusinessProfile, updateBusinessProfile, getMe, updateProfile, syncData, getAppSettings, updateAppSettings } from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
-import { scale, moderateScale, verticalScale } from '../utils/responsive';
 import { useTheme } from '../context/ThemeContext';
 
 const SettingsItem = ({ icon: Icon, label, value, color, onClick }) => (
@@ -32,19 +31,12 @@ const SettingsScreen = ({ navigation, onLogout }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
   const [accountModalVisible, setAccountModalVisible] = useState(false);
-  const [plansModalVisible, setPlansModalVisible] = useState(false);
   const [notifModalVisible, setNotifModalVisible] = useState(false);
   const [themeModalVisible, setThemeModalVisible] = useState(false);
-  const [supportModalVisible, setSupportModalVisible] = useState(false);
 
-  const [editData, setEditData] = useState({ name: '', gstin: '', address: '' });
   const [accountData, setAccountData] = useState({ name: '', email: '', password: '' });
   const [appSettings, setAppSettings] = useState({ email_notifications: true, push_notifications: true, language: 'en', theme: 'dark' });
-  const [plans, setPlans] = useState([]);
-  const [faqs, setFaqs] = useState([]);
-  const [supportContact, setSupportContact] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -52,52 +44,20 @@ const SettingsScreen = ({ navigation, onLogout }) => {
 
   const loadData = async () => {
     try {
-      const [userRes, profileRes, plansRes, settingsRes, faqRes, supportRes] = await Promise.all([
+      const [userRes, profileRes, settingsRes] = await Promise.all([
         getMe(),
         getBusinessProfile(),
-        getSubscriptionPlans(),
         getAppSettings(),
-        getFAQs(),
-        getSupportContact()
       ]);
 
       setUser(userRes.data);
       setAccountData({ name: userRes.data.name, email: userRes.data.email, password: '' });
       setProfile(profileRes.data);
-      setEditData({ name: profileRes.data.name, gstin: profileRes.data.gstin, address: profileRes.data.address });
-      setPlans(plansRes.data);
       setAppSettings(settingsRes.data);
-
-      setFaqs(faqRes.data.length > 0 ? faqRes.data : [
-        { question: 'How do I generate a GST invoice?', answer: 'Go to the Dashboard and tap the "+" button in the Recent Invoices section.' },
-        { question: 'Can I sync data across devices?', answer: 'Yes! Just sign in with the same account on any device to access your data.' },
-        { question: 'How to add my own business logo?', answer: 'Go to Settings > Business Profile and tap on the circular avatar to upload your logo.' }
-      ]);
-
-      setSupportContact(supportRes.data || {
-        email: 'support@progst.com',
-        phone: '+91 98765 43210',
-        timing: 'Mon-Fri, 9AM - 6PM'
-      });
       
       await AsyncStorage.setItem('user', JSON.stringify(userRes.data));
     } catch (error) {
       console.error('Error loading settings data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubscribe = async (planId) => {
-    try {
-      setLoading(true);
-      const res = await subscribe(planId);
-      setUser(res.data.user);
-      await AsyncStorage.setItem('user', JSON.stringify(res.data.user));
-      setPlansModalVisible(false);
-      Alert.alert('Success', `Subscribed successfully!`);
-    } catch (error) {
-      Alert.alert('Error', 'Subscription failed.');
     } finally {
       setLoading(false);
     }
@@ -121,52 +81,6 @@ const SettingsScreen = ({ navigation, onLogout }) => {
     if (!dateString) return 'Never';
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
-    if (!result.canceled) {
-      uploadLogo(result.assets[0].uri);
-    }
-  };
-
-  const uploadLogo = async (uri) => {
-    const formData = new FormData();
-    formData.append('logo', {
-      uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
-      type: 'image/jpeg',
-      name: 'logo.jpg',
-    });
-    formData.append('name', profile?.name || 'My Business');
-    try {
-      setLoading(true);
-      const res = await updateBusinessProfile(formData);
-      setProfile(res.data);
-      Alert.alert('Success', 'Logo updated');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to upload logo');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveProfile = async () => {
-    try {
-      setLoading(true);
-      const res = await updateBusinessProfile(editData);
-      setProfile(res.data);
-      setModalVisible(false);
-      Alert.alert('Success', 'Profile updated');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const saveAccount = async () => {
@@ -238,12 +152,11 @@ const SettingsScreen = ({ navigation, onLogout }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => setModalVisible(true)}>
+          <TouchableOpacity style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => navigation.navigate('BusinessProfile')}>
             <View style={styles.profileInfo}>
-              <TouchableOpacity onPress={pickImage} style={styles.profileAvatar}>
+              <View style={styles.profileAvatar}>
                 <Image source={{ uri: logoUri }} style={styles.avatarImg} />
-                <View style={styles.editOverlay}><Settings size={10} color="#fff" /></View>
-              </TouchableOpacity>
+              </View>
               <View style={styles.profileDetails}>
                 <Text style={[styles.profileName, { color: colors.text }]}>{profile?.name || 'Business Name'}</Text>
                 <Text style={[styles.profileEmail, { color: colors.textMuted }]}>{profile?.gstin || 'No GSTIN'}</Text>
@@ -290,28 +203,28 @@ const SettingsScreen = ({ navigation, onLogout }) => {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Profile Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
+      {/* Account Details Modal */}
+      <Modal visible={accountModalVisible} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={[styles.modalCard, { backgroundColor: isDark ? '#1e293b' : '#fff' }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Business Profile</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}><X size={24} color={colors.textMuted} /></TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Account Details</Text>
+              <TouchableOpacity onPress={() => setAccountModalVisible(false)}><X size={24} color={colors.textMuted} /></TouchableOpacity>
             </View>
             <ScrollView>
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Name</Text>
-                <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={editData.name} onChangeText={(t) => setEditData({...editData, name: t})} />
+                <Text style={[styles.label, { color: colors.textMuted }]}>Full Name</Text>
+                <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={accountData.name} onChangeText={(t) => setAccountData({...accountData, name: t})} />
               </View>
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>GSTIN</Text>
-                <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={editData.gstin} onChangeText={(t) => setEditData({...editData, gstin: t})} />
+                <Text style={[styles.label, { color: colors.textMuted }]}>Email</Text>
+                <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={accountData.email} editable={false} />
               </View>
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Address</Text>
-                <TextInput style={[styles.input, { height: 80, color: colors.text, borderColor: colors.border }]} value={editData.address} onChangeText={(t) => setEditData({...editData, address: t})} multiline />
+                <Text style={[styles.label, { color: colors.textMuted }]}>New Password (Optional)</Text>
+                <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={accountData.password} onChangeText={(t) => setAccountData({...accountData, password: t})} secureTextEntry />
               </View>
-              <TouchableOpacity style={styles.saveBtn} onPress={saveProfile}><Text style={styles.saveBtnText}>SAVE CHANGES</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.saveBtn} onPress={saveAccount}><Text style={styles.saveBtnText}>UPDATE ACCOUNT</Text></TouchableOpacity>
             </ScrollView>
           </View>
         </View>
@@ -362,37 +275,6 @@ const SettingsScreen = ({ navigation, onLogout }) => {
           </View>
         </View>
       </Modal>
-
-      {/* Support & Help Modal */}
-      <Modal visible={supportModalVisible} animationType="slide" transparent>
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: isDark ? '#1e293b' : '#fff', height: '80%' }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Help & Support</Text>
-              <TouchableOpacity onPress={() => setSupportModalVisible(false)}><X size={24} color={colors.textMuted} /></TouchableOpacity>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {supportContact && (
-                <View style={[styles.infoBox, { marginBottom: 24, backgroundColor: isDark ? 'rgba(15, 23, 42, 0.4)' : '#f1f5f9' }]}>
-                  <View style={[styles.iconWrapper, { backgroundColor: COLORS.primary + '15' }]}><Rocket size={18} color={COLORS.primary} /></View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.notifTitle, { color: colors.text }]}>Contact Support</Text>
-                    <Text style={[styles.notifDesc, { color: colors.textMuted }]}>{supportContact.email}</Text>
-                    <Text style={[styles.notifDesc, { color: colors.textMuted }]}>{supportContact.phone}</Text>
-                  </View>
-                </View>
-              )}
-              <Text style={[styles.sectionLabel, { color: COLORS.primary, marginBottom: 16, marginLeft: 0 }]}>FREQUENTLY ASKED QUESTIONS</Text>
-              {faqs.map((faq, idx) => (
-                <View key={idx} style={[styles.faqItem, { borderBottomColor: colors.border }]}>
-                  <Text style={[styles.faqQuestion, { color: colors.text }]}>{faq.question}</Text>
-                  <Text style={[styles.faqAnswer, { color: colors.textMuted }]}>{faq.answer}</Text>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -410,7 +292,6 @@ const styles = StyleSheet.create({
   profileInfo: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   profileAvatar: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', borderWidth: 2, borderColor: 'rgba(255,255,255,0.1)' },
   avatarImg: { width: '100%', height: '100%' },
-  editOverlay: { position: 'absolute', bottom: 0, right: 0, backgroundColor: COLORS.primary, padding: 4, borderRadius: 10, borderWidth: 2, borderColor: '#1e293b' },
   profileDetails: { gap: 2 },
   profileName: { fontSize: 18, fontWeight: '800' },
   profileEmail: { fontSize: 12, fontWeight: '600' },
@@ -436,19 +317,13 @@ const styles = StyleSheet.create({
   input: { borderRadius: 16, borderWidth: 1, paddingHorizontal: 16, height: 52, fontSize: 15 },
   saveBtn: { backgroundColor: COLORS.primary, height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
   saveBtnText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 1 },
-  premiumPlanCard: { borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' },
   notifItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)' },
   notifInfo: { flex: 1, paddingRight: 16 },
   notifTitle: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
   notifDesc: { fontSize: 13, lineHeight: 18 },
-  infoBox: { flexDirection: 'row', gap: 12, padding: 16, borderRadius: 16, alignItems: 'center' },
   themeOption: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: 'transparent' },
   themeOptionActive: { borderColor: COLORS.primary + '40' },
-  themeIconBox: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   themeOptionTitle: { fontSize: 16, fontWeight: '700' },
-  faqItem: { marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1 },
-  faqQuestion: { fontSize: 15, fontWeight: '800', marginBottom: 8 },
-  faqAnswer: { fontSize: 13, lineHeight: 20 },
 });
 
 export default SettingsScreen;
