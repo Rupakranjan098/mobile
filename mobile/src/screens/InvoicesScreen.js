@@ -113,7 +113,7 @@ const InvoicesScreen = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={[styles.invoiceItem, { backgroundColor: colors.card, borderColor: colors.border }, SHADOW.small]} 
-      onPress={() => handlePrint(item.id)}
+      onPress={() => navigation.navigate('ViewInvoice', { invoiceId: item.id })}
       activeOpacity={0.7}
     >
       <View style={[styles.invIcon, { backgroundColor: COLORS.primary + '15' }]}>

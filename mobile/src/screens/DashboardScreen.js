@@ -212,7 +212,7 @@ const DashboardScreen = () => {
               <TouchableOpacity 
                 key={invoice.id} 
                 style={[styles.listItem, { borderBottomColor: colors.border }, i === dashboardData.recentInvoices.length - 1 && { borderBottomWidth: 0 }]}
-                onPress={() => handlePrint(invoice.id)}
+                onPress={() => navigation.navigate('Invoices', { screen: 'ViewInvoice', params: { invoiceId: invoice.id } })}
               >
                 <View>
                   <Text style={[styles.itemTitle, { color: colors.text }]}>{invoice.customer?.name || 'Walk-in'}</Text>
