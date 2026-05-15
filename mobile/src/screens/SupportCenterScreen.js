@@ -112,12 +112,6 @@ const SupportCenterScreen = ({ navigation }) => {
                   <Text style={[styles.cardValue, { color: colors.textMuted }]}>{contact.email}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.contactCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleWeb}>
-                  <View style={[styles.iconBox, { backgroundColor: '#fef3c7' }]}><Globe size={24} color="#d97706" /></View>
-                  <Text style={[styles.cardLabel, { color: colors.text }]}>Visit Website</Text>
-                  <Text style={[styles.cardValue, { color: colors.textMuted }]}>{contact.website}</Text>
-                </TouchableOpacity>
-
                 <View style={[styles.contactCard, styles.fullWidthCard, { backgroundColor: colors.card, borderColor: colors.border, opacity: 0.8 }]}>
                   <View style={[styles.iconBox, { backgroundColor: '#f3e8ff' }]}><Clock size={24} color="#9333ea" /></View>
                   <View style={{ marginLeft: 16 }}>
