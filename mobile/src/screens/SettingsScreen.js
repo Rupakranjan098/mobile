@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Platform, Switch } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Moon, Sun, Check } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
@@ -103,6 +104,16 @@ const SettingsScreen = ({ navigation, onLogout }) => {
     setAppSettings(newSettings);
     try {
       if (key === 'push_notifications' && value === true) {
+        // Handle Expo Go limitations for remote notifications
+        if (Platform.OS === 'android' && Constants.executionEnvironment === 'storeClient') {
+          Alert.alert(
+            'Expo Go Limitation',
+            'Remote push notifications are not supported in Expo Go on Android. Please use a development build for full notification support.'
+          );
+          setAppSettings({ ...newSettings, push_notifications: false });
+          return;
+        }
+
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
         if (existingStatus !== 'granted') {
