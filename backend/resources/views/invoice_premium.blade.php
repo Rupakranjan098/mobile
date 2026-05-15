@@ -191,9 +191,32 @@
         .sig-line { border-top: 2px solid #111827; padding-top: 8px; font-weight: 800; font-size: 14px; }
 
         @media print {
-            body { padding: 0; }
+            body { padding: 0; background: #fff; }
             .invoice-container { width: 100%; max-width: none; box-shadow: none; margin: 0; }
+            .no-print { display: none !important; }
         }
+
+        /* Floating Print Button */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: #fff;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+            cursor: pointer;
+            z-index: 9999;
+            border: none;
+            transition: transform 0.2s;
+        }
+        .print-btn:active { transform: scale(0.9); }
+        .print-btn svg { width: 28px; height: 28px; }
     </style>
 </head>
 <body>
@@ -296,5 +319,19 @@
             </div>
         </div>
     </div>
+    <button class="print-btn no-print" onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231a1.125 1.125 0 0 1-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-14.326 0C3.768 7.44 3 8.375 3 9.456v6.294a2.25 2.25 0 0 0 2.25 2.25h1.091M15 7V4.5a2.25 2.25 0 0 0-2.25-2.25h-1.5A2.25 2.25 0 0 0 9 4.5V7m6 0h-6M9 7h6" />
+        </svg>
+    </button>
+
+    <script>
+        // Optional: Auto-trigger print on load if requested
+        window.onload = function() {
+            if (window.location.search.includes('auto=true')) {
+                window.print();
+            }
+        };
+    </script>
 </body>
 </html>

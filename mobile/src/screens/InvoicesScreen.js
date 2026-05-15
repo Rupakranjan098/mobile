@@ -66,7 +66,7 @@ const InvoicesScreen = ({ navigation }) => {
   };
 
   const handlePrint = async (id) => {
-    const url = `${SERVER_URL}/invoices/${id}/print`;
+    const url = `${SERVER_URL}/invoices/${id}/print?auto=true`;
     try {
       await WebBrowser.openBrowserAsync(url);
     } catch (error) {
