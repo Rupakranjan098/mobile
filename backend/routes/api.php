@@ -22,7 +22,10 @@ Route::get('/ping', function () {
 });
 
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/send-login-otp', [AuthController::class, 'sendLoginOtp']);
+Route::post('/verify-login-otp', [AuthController::class, 'verifyLoginOtp']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);

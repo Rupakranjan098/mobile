@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react-native';
+import { Mail, Lock, User, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
-import { register } from '../services/api';
+import { register, verifyOtp } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SCREEN_WIDTH } from '../utils/responsive';
@@ -11,6 +11,9 @@ import { SCREEN_WIDTH } from '../utils/responsive';
 
 
 const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
+  const [step, setStep] = useState('register'); // 'register' or 'otp'
+  const [otp, setOtp] = useState('');
+  const [debugOtp, setDebugOtp] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,23 +42,47 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
     setLoading(true);
     try {
       const response = await register(formData);
-      await AsyncStorage.setItem('token', response.data.access_token);
-      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-      onRegisterSuccess(response.data.user);
+      if (response.data.debug_otp) {
+        setDebugOtp(response.data.debug_otp);
+      }
+      setStep('otp');
+      Alert.alert('Success', 'OTP has been sent to your email. Please check your inbox.');
     } catch (error) {
       let message = 'Registration failed. Please try again.';
       
       if (error.response?.data?.errors) {
-        // Laravel default validation structure
         const errors = error.response.data.errors;
         message = Object.values(errors).flat().join('\n');
       } else if (error.response?.data) {
-        // Flattened structure if the API returns direct keys
         const data = error.response.data;
-        message = Object.values(data).filter(v => Array.isArray(v)).flat().join('\n') || data.message || message;
+        message = typeof data.message === 'string' ? data.message : Object.values(data).filter(v => Array.isArray(v)).flat().join('\n') || message;
       }
       
       Alert.alert('Registration Error', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await verifyOtp({
+        ...formData,
+        otp: otp
+      });
+      
+      await AsyncStorage.setItem('token', response.data.access_token);
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+      onRegisterSuccess(response.data.user);
+    } catch (error) {
+      const message = error.response?.data?.message || 'Invalid or expired OTP. Please try again.';
+      Alert.alert('Verification Failed', message);
     } finally {
       setLoading(false);
     }
@@ -90,94 +117,146 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }) => {
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.welcomeText}>Create Account</Text>
-              <Text style={styles.subtitle}>Start your business journey today</Text>
+              <Text style={styles.welcomeText}>
+                {step === 'register' ? 'Create Account' : 'Verify Email'}
+              </Text>
+              <Text style={styles.subtitle}>
+                {step === 'register' ? 'Start your business journey today' : `Enter the 6-digit code sent to ${formData.email}`}
+              </Text>
             </View>
 
             <View style={styles.glassCard}>
-              <View style={styles.form}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Full Name</Text>
-                  <View style={styles.inputWrapper}>
-                    <User size={18} color="#94a3b8" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="John Doe"
-                      placeholderTextColor="#64748b"
-                      value={formData.name}
-                      onChangeText={(val) => setFormData({...formData, name: val})}
-                    />
+              {step === 'register' ? (
+                <View style={styles.form}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Full Name</Text>
+                    <View style={styles.inputWrapper}>
+                      <User size={18} color="#94a3b8" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="John Doe"
+                        placeholderTextColor="#64748b"
+                        value={formData.name}
+                        onChangeText={(val) => setFormData({...formData, name: val})}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Email Address</Text>
+                    <View style={styles.inputWrapper}>
+                      <Mail size={18} color="#94a3b8" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="name@company.com"
+                        placeholderTextColor="#64748b"
+                        value={formData.email}
+                        onChangeText={(val) => setFormData({...formData, email: val})}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Password</Text>
+                    <View style={styles.inputWrapper}>
+                      <Lock size={18} color="#94a3b8" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Create a password"
+                        placeholderTextColor="#64748b"
+                        value={formData.password}
+                        onChangeText={(val) => setFormData({...formData, password: val})}
+                        secureTextEntry
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Confirm Password</Text>
+                    <View style={styles.inputWrapper}>
+                      <Lock size={18} color="#94a3b8" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Confirm your password"
+                        placeholderTextColor="#64748b"
+                        value={formData.password_confirmation}
+                        onChangeText={(val) => setFormData({...formData, password_confirmation: val})}
+                        secureTextEntry
+                      />
+                    </View>
+                  </View>
+
+                  <TouchableOpacity 
+                    style={[styles.registerBtn, SHADOW.medium]} 
+                    onPress={handleRegister}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <View style={styles.btnContent}>
+                        <Text style={styles.registerBtnText}>SEND OTP</Text>
+                        <ArrowRight size={18} color="#fff" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>Already have an account?</Text>
+                    <TouchableOpacity onPress={onSwitchToLogin}>
+                      <Text style={styles.loginLink}>Login Now</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email Address</Text>
-                  <View style={styles.inputWrapper}>
-                    <Mail size={18} color="#94a3b8" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="name@company.com"
-                      placeholderTextColor="#64748b"
-                      value={formData.email}
-                      onChangeText={(val) => setFormData({...formData, email: val})}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Password</Text>
-                  <View style={styles.inputWrapper}>
-                    <Lock size={18} color="#94a3b8" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Create a password"
-                      placeholderTextColor="#64748b"
-                      value={formData.password}
-                      onChangeText={(val) => setFormData({...formData, password: val})}
-                      secureTextEntry
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Confirm Password</Text>
-                  <View style={styles.inputWrapper}>
-                    <Lock size={18} color="#94a3b8" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Confirm your password"
-                      placeholderTextColor="#64748b"
-                      value={formData.password_confirmation}
-                      onChangeText={(val) => setFormData({...formData, password_confirmation: val})}
-                      secureTextEntry
-                    />
-                  </View>
-                </View>
-
-                <TouchableOpacity 
-                  style={[styles.registerBtn, SHADOW.medium]} 
-                  onPress={handleRegister}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <View style={styles.btnContent}>
-                      <Text style={styles.registerBtnText}>CREATE ACCOUNT</Text>
-                      <ArrowRight size={18} color="#fff" />
+              ) : (
+                <View style={styles.form}>
+                  {debugOtp && (
+                    <View style={styles.debugContainer}>
+                      <Text style={styles.debugText}>Dev Mode OTP: {debugOtp}</Text>
                     </View>
                   )}
-                </TouchableOpacity>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Verification Code</Text>
+                    <View style={styles.inputWrapper}>
+                      <ShieldCheck size={18} color="#94a3b8" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="123456"
+                        placeholderTextColor="#64748b"
+                        value={otp}
+                        onChangeText={setOtp}
+                        keyboardType="number-pad"
+                        maxLength={6}
+                      />
+                    </View>
+                  </View>
 
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>Already have an account?</Text>
-                  <TouchableOpacity onPress={onSwitchToLogin}>
-                    <Text style={styles.loginLink}>Login Now</Text>
+                  <TouchableOpacity 
+                    style={[styles.registerBtn, SHADOW.medium]} 
+                    onPress={handleVerifyOtp}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <View style={styles.btnContent}>
+                        <Text style={styles.registerBtnText}>VERIFY & LOGIN</Text>
+                        <ArrowRight size={18} color="#fff" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={styles.backBtn}
+                    onPress={() => setStep('register')}
+                  >
+                    <ArrowLeft size={16} color="#94a3b8" />
+                    <Text style={styles.backBtnText}>Back to Registration</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              )}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -200,7 +279,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 20, // Reduced top padding
+    paddingTop: 20,
     paddingBottom: 40,
   },
   decorCircle: {
@@ -209,11 +288,11 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 20, // Tightened spacing
+    marginBottom: 20,
   },
   logoContainer: {
     width: SCREEN_WIDTH * 0.7,
-    height: 100, // Balanced height
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -306,6 +385,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.primary,
     fontWeight: '700',
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 10,
+  },
+  backBtnText: {
+    fontSize: 14,
+    color: '#94a3b8',
+    fontWeight: '600',
+  },
+  debugContainer: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+    marginBottom: 8,
+  },
+  debugText: {
+    color: '#4ade80',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
