@@ -86,17 +86,19 @@ const PlansScreen = ({ navigation }) => {
                   </View>
                   
                   <View style={styles.featuresList}>
-                    {plan.features?.map((feature, idx) => (
-                      <View key={idx} style={styles.featureItem}>
-                        <Check size={16} color={COLORS.primary} />
-                        <Text style={[styles.featureText, { color: colors.textMuted }]}>{feature}</Text>
-                      </View>
-                    ))}
-                    {!plan.features && (
+                    {Array.isArray(plan.features) ? (
+                      plan.features.map((feature, idx) => (
+                        <View key={idx} style={styles.featureItem}>
+                          <Check size={16} color={COLORS.primary} />
+                          <Text style={[styles.featureText, { color: colors.textMuted }]}>{feature}</Text>
+                        </View>
+                      ))
+                    ) : (
                       <>
                         <View style={styles.featureItem}><Check size={16} color={COLORS.primary} /><Text style={[styles.featureText, { color: colors.textMuted }]}>Unlimited Invoices</Text></View>
                         <View style={styles.featureItem}><Check size={16} color={COLORS.primary} /><Text style={[styles.featureText, { color: colors.textMuted }]}>Cloud Backup & Sync</Text></View>
                         <View style={styles.featureItem}><Check size={16} color={COLORS.primary} /><Text style={[styles.featureText, { color: colors.textMuted }]}>AI Business Assistant</Text></View>
+                        <View style={styles.featureItem}><Check size={16} color={COLORS.primary} /><Text style={[styles.featureText, { color: colors.textMuted }]}>Priority Support</Text></View>
                       </>
                     )}
                   </View>
