@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Send, Bot, User, BarChart2, PieChart, Sparkles, ChevronDown } from 'lucide-react-native';
+import { Send, Bot, User, BarChart2, PieChart, Sparkles, ChevronDown, ChevronLeft } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { scale, moderateScale, verticalScale, SCREEN_WIDTH } from '../utils/responsive';
@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
 
-const AIChatScreen = () => {
+const AIChatScreen = ({ navigation }) => {
   const { isDark, colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState([
@@ -76,6 +76,9 @@ const AIChatScreen = () => {
       <SafeAreaView style={styles.safeArea}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <View style={styles.headerTitleContainer}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.glass }]}>
+              <ChevronLeft size={24} color={colors.text} />
+            </TouchableOpacity>
             <View style={styles.botIconWrapper}><Bot size={20} color="#fff" /></View>
             <View>
               <Text style={[styles.headerTitle, { color: colors.text }]}>AI Assistant</Text>
@@ -85,7 +88,7 @@ const AIChatScreen = () => {
           <TouchableOpacity style={[styles.headerAction, { backgroundColor: COLORS.primary + '15' }]}><Sparkles size={20} color={COLORS.primary} /></TouchableOpacity>
         </View>
 
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container} keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : null} style={styles.container} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
           <ScrollView ref={scrollViewRef} style={styles.chatContainer} contentContainerStyle={styles.chatContent} showsVerticalScrollIndicator={false}>
             {messages.map((msg) => (
               <View key={msg.id} style={[styles.messageWrapper, msg.type === 'user' ? styles.userMessageWrapper : styles.botMessageWrapper]}>
@@ -139,6 +142,7 @@ const styles = StyleSheet.create({
   onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.success },
   onlineText: { fontSize: moderateScale(10), fontWeight: '700' },
   headerAction: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  backBtn: { width: 36, height: 36, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 4 },
   container: { flex: 1 },
   chatContainer: { flex: 1 },
   chatContent: { padding: SPACING.md, paddingBottom: SPACING.xl },
