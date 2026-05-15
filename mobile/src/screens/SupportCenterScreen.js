@@ -122,7 +122,7 @@ const SupportCenterScreen = ({ navigation }) => {
                   <View style={[styles.iconBox, { backgroundColor: '#f3e8ff' }]}><Clock size={24} color="#9333ea" /></View>
                   <View style={{ marginLeft: 16 }}>
                     <Text style={[styles.cardLabel, { color: colors.text }]}>Working Hours</Text>
-                    <Text style={[styles.cardValue, { color: colors.textMuted, textAlign: 'left' }]}>{contact.timing}</Text>
+                    <Text style={[styles.cardValue, { color: colors.textMuted, textAlign: 'left' }]}>{contact.timing || 'Mon-Fri, 9:00 AM - 6:00 PM'}</Text>
                   </View>
                 </View>
               </View>
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   contactSubtitle: { fontSize: 14, textAlign: 'center', paddingHorizontal: 40, lineHeight: 20 },
   contactGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12, marginBottom: 30 },
   contactCard: { width: '48%', padding: 16, borderRadius: 24, borderWidth: 1, alignItems: 'center', gap: 8 },
-  fullWidthCard: { width: '100%', flexDirection: 'row', justifyContent: 'flex-start', paddingHorizontal: 20 },
+  fullWidthCard: { width: '100%', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 20 },
   iconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   cardLabel: { fontSize: 13, fontWeight: '800' },
   cardValue: { fontSize: 11, fontWeight: '700', textAlign: 'center' },
