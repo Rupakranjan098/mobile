@@ -353,11 +353,11 @@ const CreateInvoiceScreen = ({ navigation }) => {
       {/* Barcode Scanner Modal */}
       <Modal visible={isScanning} animationType="slide">
         <SafeAreaView style={{ flex: 1, backgroundColor: '#000', alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', padding: 16 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', padding: 16, alignItems: 'center' }}>
             <TouchableOpacity onPress={() => setIsScanning(false)} style={styles.scanCloseBtn}>
-              <X size={22} color={COLORS.textMain} />
+              <X size={20} color="#1e293b" />
             </TouchableOpacity>
-            <Text style={{ fontSize: 18, fontWeight: '800', color: '#111' }}>Scan Product</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#fff' }}>Scan Product</Text>
             <View style={{ width: 40 }} />
           </View>
           <Text style={{ color: '#6b7280', fontSize: 13, textAlign: 'center', marginBottom: 24, paddingHorizontal: 32 }}>
