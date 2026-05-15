@@ -36,7 +36,14 @@ const AIChatScreen = ({ navigation }) => {
 
     try {
       const res = await askAI(queryText);
-      const aiResponse = { id: (Date.now() + 1).toString(), type: 'bot', text: res.data.text, chartType: res.data.chartType, chartData: res.data.chartData, timestamp: new Date() };
+      const aiResponse = { 
+        id: (Date.now() + 1).toString(), 
+        type: 'bot', 
+        text: res.data?.text || "I'm sorry, I couldn't process that request properly.", 
+        chartType: res.data?.chartType, 
+        chartData: res.data?.chartData, 
+        timestamp: new Date() 
+      };
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
       console.error('AI Error:', error);
@@ -150,7 +157,7 @@ const styles = StyleSheet.create({
   botMessageWrapper: { alignSelf: 'flex-start', gap: 8 },
   userMessageWrapper: { alignSelf: 'flex-end', justifyContent: 'flex-end' },
   msgAvatar: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginTop: 4 },
-  messageBubble: { padding: SPACING.md, borderRadius: 24, borderAround: 1, borderWidth: 1 },
+  messageBubble: { padding: SPACING.md, borderRadius: 24, borderWidth: 1 },
   botBubble: { borderTopLeftRadius: 4 },
   userBubble: { backgroundColor: COLORS.primary, borderColor: 'transparent', borderTopRightRadius: 4 },
   messageText: { fontSize: moderateScale(14), lineHeight: 20 },
