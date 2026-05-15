@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Platform, Switch } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Check, Zap, Crown, Target, Rocket, ArrowRight } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
@@ -174,6 +175,31 @@ const SettingsScreen = ({ onLogout }) => {
       Alert.alert('Error', 'Failed to update account');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNotificationToggle = async (key, value) => {
+    const newSettings = { ...appSettings, [key]: value };
+    setAppSettings(newSettings);
+    
+    try {
+      if (key === 'push_notifications' && value === true) {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        if (finalStatus !== 'granted') {
+          Alert.alert('Permission Required', 'Please enable notifications in your phone settings to receive push alerts.');
+          setAppSettings({ ...newSettings, push_notifications: false });
+          return;
+        }
+      }
+      
+      await updateAppSettings({ [key]: value });
+    } catch (error) {
+      console.error('Failed to update notification settings:', error);
     }
   };
 
@@ -369,6 +395,51 @@ const SettingsScreen = ({ onLogout }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Notifications Modal */}
+      <Modal visible={notifModalVisible} animationType="slide" transparent>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Notifications</Text>
+              <TouchableOpacity onPress={() => setNotifModalVisible(false)}><X size={24} color="#94a3b8" /></TouchableOpacity>
+            </View>
+            
+            <View style={styles.notifItem}>
+              <View style={styles.notifInfo}>
+                <Text style={styles.notifTitle}>Push Notifications</Text>
+                <Text style={styles.notifDesc}>Receive instant alerts for invoices and stock.</Text>
+              </View>
+              <Switch
+                value={appSettings.push_notifications}
+                onValueChange={(v) => handleNotificationToggle('push_notifications', v)}
+                trackColor={{ false: '#334155', true: COLORS.primary }}
+                thumbColor="#fff"
+              />
+            </View>
+
+            <View style={styles.notifItem}>
+              <View style={styles.notifInfo}>
+                <Text style={styles.notifTitle}>Email Notifications</Text>
+                <Text style={styles.notifDesc}>Get weekly reports and billing info via email.</Text>
+              </View>
+              <Switch
+                value={appSettings.email_notifications}
+                onValueChange={(v) => handleNotificationToggle('email_notifications', v)}
+                trackColor={{ false: '#334155', true: COLORS.primary }}
+                thumbColor="#fff"
+              />
+            </View>
+
+            <View style={[styles.infoBox, { marginTop: 20 }]}>
+              <HelpCircle size={16} color="#64748b" />
+              <Text style={styles.infoBoxText}>
+                We only send important business updates. You can change these anytime.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -435,6 +506,12 @@ const styles = StyleSheet.create({
   featureText: { fontSize: 13, color: '#e2e8f0', fontWeight: '600' },
   selectBtn: { height: 48, borderRadius: 14, borderAround: 1, borderWidth: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.03)' },
   selectBtnText: { fontSize: 14, fontWeight: '800' },
+  notifItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)' },
+  notifInfo: { flex: 1, paddingRight: 16 },
+  notifTitle: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 4 },
+  notifDesc: { fontSize: 13, color: '#94a3b8', lineHeight: 18 },
+  infoBox: { flexDirection: 'row', gap: 12, backgroundColor: 'rgba(15, 23, 42, 0.4)', padding: 16, borderRadius: 16, alignItems: 'center' },
+  infoBoxText: { flex: 1, fontSize: 12, color: '#64748b', fontWeight: '500', lineHeight: 18 },
 });
 
 export default SettingsScreen;
