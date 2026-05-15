@@ -114,20 +114,30 @@ const ProductsScreen = () => {
     ).start();
   };
 
-  const onBarcodeScanned = async ({ data }) => {
-    if (scanned.current || isSearchingAPI || !isScanning) return;
+  const onBarcodeScanned = async ({ type, data }) => {
+    if (scanned.current || isSearchingAPI) return;
+    
+    console.log(`[Scanner] Scanned ${type} with data: ${data}`);
     scanned.current = true;
     Vibration.vibrate(100);
     setIsSearchingAPI(true);
+
     try {
       const response = await getProductByBarcode(data);
       const { source, product } = response.data;
+      
+      console.log(`[Scanner] API Response: source=${source}, product=${product?.name}`);
+      
       setIsSearchingAPI(false);
       setIsScanning(false);
+      
       if (source === 'local') {
-        Alert.alert('In Stock', `"${product.name}" is already in your inventory.`);
+        Alert.alert('In Stock', `"${product.name}" is already in your inventory.`, [
+          { text: 'OK', onPress: () => { scanned.current = false; } }
+        ]);
         return;
       }
+      
       setNewProduct({
         name: product.name || '',
         price: product.price ? String(product.price) : '',
@@ -138,6 +148,7 @@ const ProductsScreen = () => {
       });
       setShowAddModal(true);
     } catch (error) {
+      console.error('[Scanner] Lookup error:', error);
       setIsSearchingAPI(false);
       setIsScanning(false);
       setNewProduct({ ...initialProductState, barcode: data });
@@ -255,7 +266,19 @@ const ProductsScreen = () => {
 
       <Modal visible={isScanning && !isScanningFromModal} animationType="fade">
         <View style={styles.cameraContainer}>
-          <CameraView style={StyleSheet.absoluteFill} facing="back" enableTorch={isFlashOn} onBarcodeScanned={onBarcodeScanned} />
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            enableTorch={isFlashOn}
+            onBarcodeScanned={onBarcodeScanned}
+            barcodeScannerSettings={{
+              barcodeTypes: [
+                'ean13', 'ean8', 'upc_a', 'upc_e', 
+                'code128', 'code39', 'code93', 'itf14',
+                'codabar', 'aztec', 'datamatrix', 'qr', 'pdf417'
+              ],
+            }}
+          />
           <SafeAreaView style={styles.cameraOverlay}>
             <View style={styles.cameraHeader}>
               <TouchableOpacity onPress={() => setIsScanning(false)}><X size={28} color="#fff" /></TouchableOpacity>
