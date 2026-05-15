@@ -98,7 +98,7 @@ const AIChatScreen = ({ navigation }) => {
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
           style={styles.container} 
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
           <ScrollView ref={scrollViewRef} style={styles.chatContainer} contentContainerStyle={styles.chatContent} showsVerticalScrollIndicator={false}>
             {messages.map((msg) => (
@@ -119,7 +119,7 @@ const AIChatScreen = ({ navigation }) => {
             )}
           </ScrollView>
 
-          <View style={[styles.inputArea, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: insets.bottom + 12 }]}>
+          <View style={[styles.inputArea, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: insets.bottom + 20 }]}>
             <View style={styles.suggestionsContainer}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {['Profit analysis', 'Top customers', 'Show sales chart'].map((s, i) => (
