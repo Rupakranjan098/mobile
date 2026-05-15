@@ -12,11 +12,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import { SERVER_URL } from '../config';
-
-
-
+import { useTheme } from '../context/ThemeContext';
 
 const DashboardScreen = () => {
+  const { isDark, colors } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [data, setData] = useState(null);
@@ -60,7 +59,7 @@ const DashboardScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }]}>
+      <View style={[styles.mainContainer, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -70,15 +69,14 @@ const DashboardScreen = () => {
   const userName = user?.name?.split(' ')[0] || 'User';
 
   return (
-    <View style={styles.mainContainer}>
+    <View style={[styles.mainContainer, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={['#0f172a', '#1e293b']}
+        colors={isDark ? ['#0f172a', '#1e293b'] : ['#f8fafc', '#f1f5f9']}
         style={StyleSheet.absoluteFill}
       />
       
-      {/* Decorative background spheres (Balls) */}
-      <View style={[styles.decorCircle, { top: -100, right: -150, width: 400, height: 400, backgroundColor: 'rgba(34, 197, 94, 0.12)' }]} />
-      <View style={[styles.decorCircle, { top: 400, left: -200, width: 350, height: 350, backgroundColor: 'rgba(30, 64, 175, 0.1)' }]} />
+      <View style={[styles.decorCircle, { top: -100, right: -150, width: 400, height: 400, backgroundColor: isDark ? 'rgba(34, 197, 94, 0.12)' : 'rgba(34, 197, 94, 0.05)' }]} />
+      <View style={[styles.decorCircle, { top: 400, left: -200, width: 350, height: 350, backgroundColor: isDark ? 'rgba(30, 64, 175, 0.1)' : 'rgba(30, 64, 175, 0.03)' }]} />
 
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
@@ -97,7 +95,7 @@ const DashboardScreen = () => {
                   resizeMode="contain"
                 />
                 <View>
-                  <Text style={styles.welcomeText}>Hello, {userName}</Text>
+                  <Text style={[styles.welcomeText, { color: colors.text }]}>Hello, {userName}</Text>
                   {user?.subscription_plan && (
                     <View style={styles.planBadge}>
                       <Text style={styles.planBadgeText}>{user.subscription_plan.name}</Text>
@@ -107,7 +105,7 @@ const DashboardScreen = () => {
               </View>
             </View>
             <View style={styles.headerActions}>
-              <View style={styles.avatar}>
+              <View style={[styles.avatar, { borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)' }]}>
                 <Image
                   source={{ uri: `https://ui-avatars.com/api/?name=${userName}&background=22c55e&color=fff` }}
                   style={styles.avatarImg}
@@ -117,44 +115,44 @@ const DashboardScreen = () => {
           </View>
 
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Products')}>
-              <LinearGradient colors={['rgba(34, 197, 94, 0.2)', 'rgba(34, 197, 94, 0.05)']} style={styles.actionGradient} />
+            <TouchableOpacity style={[styles.actionCard, { borderColor: colors.border }]} onPress={() => navigation.navigate('Products')}>
+              <LinearGradient colors={['rgba(34, 197, 94, 0.15)', 'rgba(34, 197, 94, 0.05)']} style={styles.actionGradient} />
               <ScanLine size={24} color="#4ade80" />
-              <Text style={styles.actionLabel}>Scan</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Scan</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Invoices')}>
-              <LinearGradient colors={['rgba(59, 130, 246, 0.2)', 'rgba(59, 130, 246, 0.05)']} style={styles.actionGradient} />
+            <TouchableOpacity style={[styles.actionCard, { borderColor: colors.border }]} onPress={() => navigation.navigate('Invoices')}>
+              <LinearGradient colors={['rgba(59, 130, 246, 0.15)', 'rgba(59, 130, 246, 0.05)']} style={styles.actionGradient} />
               <Plus size={24} color="#60a5fa" />
-              <Text style={styles.actionLabel}>Invoice</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Invoice</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Reports')}>
-              <LinearGradient colors={['rgba(168, 85, 247, 0.2)', 'rgba(168, 85, 247, 0.05)']} style={styles.actionGradient} />
+            <TouchableOpacity style={[styles.actionCard, { borderColor: colors.border }]} onPress={() => navigation.navigate('Reports')}>
+              <LinearGradient colors={['rgba(168, 85, 247, 0.15)', 'rgba(168, 85, 247, 0.05)']} style={styles.actionGradient} />
               <FileBarChart size={24} color="#c084fc" />
-              <Text style={styles.actionLabel}>Reports</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Reports</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Expenses')}>
-              <LinearGradient colors={['rgba(244, 63, 94, 0.2)', 'rgba(244, 63, 94, 0.05)']} style={styles.actionGradient} />
+            <TouchableOpacity style={[styles.actionCard, { borderColor: colors.border }]} onPress={() => navigation.navigate('Expenses')}>
+              <LinearGradient colors={['rgba(244, 63, 94, 0.15)', 'rgba(244, 63, 94, 0.05)']} style={styles.actionGradient} />
               <PieChart size={24} color="#fb7185" />
-              <Text style={styles.actionLabel}>Expense</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Expense</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Business Overview</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Business Overview</Text>
             <View style={styles.liveBadge}><View style={styles.liveDot} /><Text style={styles.liveText}>LIVE</Text></View>
           </View>
 
           <View style={styles.statsGrid}>
             {dashboardData.stats.map((stat, i) => (
-              <View key={i} style={[styles.statCard, SHADOW.small]}>
+              <View key={i} style={[styles.statCard, { backgroundColor: colors.glass, borderColor: colors.border }, SHADOW.small]}>
                 <View style={[styles.statIconWrapper, styles[`type${stat.type.charAt(0).toUpperCase() + stat.type.slice(1)}`]]}>
                   {stat.type === 'sales' && <TrendingUp size={16} color="#dbeafe" />}
                   {stat.type === 'paid' && <TrendingUp size={16} color="#dcfce7" />}
                   {stat.type === 'unpaid' && <TrendingDown size={16} color="#fef3c7" />}
                   {stat.type === 'overdue' && <TrendingDown size={16} color="#fee2e2" />}
                 </View>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-                <Text style={styles.statValue}>₹ {stat.value.toLocaleString()}</Text>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>{stat.label}</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>₹ {stat.value.toLocaleString()}</Text>
                 <Text style={[styles.statTrend, stat.trend.startsWith('+') ? styles.up : styles.down]}>
                   {stat.trend}
                 </Text>
@@ -162,12 +160,15 @@ const DashboardScreen = () => {
             ))}
           </View>
 
-          <View style={[styles.chartCard, SHADOW.medium]}>
-            <LinearGradient colors={['rgba(30, 41, 59, 0.8)', 'rgba(15, 23, 42, 0.8)']} style={StyleSheet.absoluteFill} />
+          <View style={[styles.chartCard, { borderColor: colors.border }, SHADOW.medium]}>
+            <LinearGradient 
+              colors={isDark ? ['rgba(30, 41, 59, 0.8)', 'rgba(15, 23, 42, 0.8)'] : ['rgba(255, 255, 255, 0.9)', 'rgba(241, 245, 249, 0.9)']} 
+              style={StyleSheet.absoluteFill} 
+            />
             <View style={styles.cardHeader}>
               <View>
-                <Text style={styles.cardTitle}>Sales Analytics</Text>
-                <Text style={styles.cardSub}>Weekly performance trend</Text>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>Sales Analytics</Text>
+                <Text style={[styles.cardSub, { color: colors.textMuted }]}>Weekly performance trend</Text>
               </View>
               <View style={styles.chartTag}><Text style={styles.chartTagText}>+12.5%</Text></View>
             </View>
@@ -184,16 +185,16 @@ const DashboardScreen = () => {
                 height={200}
                 chartConfig={{
                   backgroundColor: 'transparent',
-                  backgroundGradientFrom: '#1e293b',
-                  backgroundGradientTo: '#1e293b',
+                  backgroundGradientFrom: isDark ? '#1e293b' : '#fff',
+                  backgroundGradientTo: isDark ? '#1e293b' : '#fff',
                   decimalPlaces: 0,
                   color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
+                  labelColor: (opacity = 1) => isDark ? `rgba(148, 163, 184, ${opacity})` : `rgba(71, 85, 105, ${opacity})`,
                   style: { borderRadius: 16 },
-                  propsForDots: { r: "5", strokeWidth: "3", stroke: "#fff" },
-                  propsForBackgroundLines: { strokeDasharray: "", stroke: 'rgba(255,255,255,0.03)' },
+                  propsForDots: { r: "5", strokeWidth: "3", stroke: COLORS.primary },
+                  propsForBackgroundLines: { strokeDasharray: "", stroke: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
                   fillShadowGradient: COLORS.primary,
-                  fillShadowGradientOpacity: 0.2,
+                  fillShadowGradientOpacity: 0.1,
                 }}
                 bezier
                 style={styles.chart}
@@ -202,25 +203,25 @@ const DashboardScreen = () => {
           </View>
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Invoices</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Invoices</Text>
             <TouchableOpacity><Text style={styles.viewAll}>See All</Text></TouchableOpacity>
           </View>
 
-          <View style={[styles.listCard, SHADOW.small]}>
+          <View style={[styles.listCard, { backgroundColor: colors.glass, borderColor: colors.border }, SHADOW.small]}>
             {dashboardData.recentInvoices?.map((invoice, i) => (
               <TouchableOpacity 
                 key={invoice.id} 
-                style={[styles.listItem, i === dashboardData.recentInvoices.length - 1 && { borderBottomWidth: 0 }]}
+                style={[styles.listItem, { borderBottomColor: colors.border }, i === dashboardData.recentInvoices.length - 1 && { borderBottomWidth: 0 }]}
                 onPress={() => handlePrint(invoice.id)}
               >
                 <View>
-                  <Text style={styles.itemTitle}>{invoice.customer?.name || 'Walk-in'}</Text>
-                  <Text style={styles.itemSub}>{new Date(invoice.date).toLocaleDateString()}</Text>
+                  <Text style={[styles.itemTitle, { color: colors.text }]}>{invoice.customer?.name || 'Walk-in'}</Text>
+                  <Text style={[styles.itemSub, { color: colors.textMuted }]}>{new Date(invoice.date).toLocaleDateString()}</Text>
                 </View>
                 <View style={styles.itemMeta}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={styles.itemValue}>₹{parseFloat(invoice.total_amount).toLocaleString()}</Text>
-                    <View style={styles.smallPrintBtn}>
+                    <Text style={[styles.itemValue, { color: colors.text }]}>₹{parseFloat(invoice.total_amount).toLocaleString()}</Text>
+                    <View style={[styles.smallPrintBtn, { backgroundColor: COLORS.primary + '15' }]}>
                       <Printer size={14} color={COLORS.primary} />
                     </View>
                   </View>
@@ -233,16 +234,16 @@ const DashboardScreen = () => {
           </View>
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Inventory Alerts</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Inventory Alerts</Text>
             <View style={styles.badge}><Text style={styles.badgeText}>{dashboardData.lowStockProducts?.length || 0}</Text></View>
           </View>
 
-          <View style={[styles.listCard, SHADOW.small]}>
+          <View style={[styles.listCard, { backgroundColor: colors.glass, borderColor: colors.border }, SHADOW.small]}>
             {dashboardData.lowStockProducts?.map((product, i) => (
-              <View key={product.id} style={[styles.listItem, i === dashboardData.lowStockProducts.length - 1 && { borderBottomWidth: 0 }]}>
+              <View key={product.id} style={[styles.listItem, { borderBottomColor: colors.border }, i === dashboardData.lowStockProducts.length - 1 && { borderBottomWidth: 0 }]}>
                 <View>
-                  <Text style={styles.itemTitle}>{product.name}</Text>
-                  <Text style={styles.itemSub}>Stock: {product.stock} {product.unit}</Text>
+                  <Text style={[styles.itemTitle, { color: colors.text }]}>{product.name}</Text>
+                  <Text style={[styles.itemSub, { color: colors.textMuted }]}>Stock: {product.stock} {product.unit}</Text>
                 </View>
                 <View style={[styles.stockTag, product.stock === 0 ? styles.tagOut : styles.tagLow]}>
                   <Text style={styles.tagText}>{product.stock === 0 ? 'Out' : 'Low'}</Text>
@@ -250,14 +251,13 @@ const DashboardScreen = () => {
               </View>
             ))}
             {!dashboardData.lowStockProducts?.length && (
-              <Text style={styles.emptyMsg}>All products well stocked! ✅</Text>
+              <Text style={[styles.emptyMsg, { color: colors.textMuted }]}>All products well stocked! ✅</Text>
             )}
           </View>
 
           <View style={{ height: 120 }} />
         </ScrollView>
 
-        {/* Floating AI Button */}
         <TouchableOpacity
           style={[
             styles.floatingAiBtn,
@@ -275,53 +275,50 @@ const DashboardScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: '#0f172a' },
+  mainContainer: { flex: 1 },
   safeArea: { flex: 1 },
   decorCircle: { position: 'absolute', borderRadius: 999 },
   container: { flex: 1, padding: 16 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  avatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'rgba(34, 197, 94, 0.3)', overflow: 'hidden' },
+  avatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, overflow: 'hidden' },
   avatarImg: { width: '100%', height: '100%' },
-  welcomeText: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  welcomeText: { fontSize: 20, fontWeight: '800' },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   quickActions: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28, gap: 12 },
-  actionCard: { flex: 1, height: 80, borderRadius: 20, justifyContent: 'center', alignItems: 'center', gap: 8, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  actionCard: { flex: 1, height: 80, borderRadius: 20, justifyContent: 'center', alignItems: 'center', gap: 8, overflow: 'hidden', borderWidth: 1 },
   actionGradient: { ...StyleSheet.absoluteFillObject },
-  actionLabel: { fontSize: 11, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+  actionLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
   liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239, 68, 68, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#ef4444' },
   liveText: { color: '#ef4444', fontSize: 10, fontWeight: '900' },
-  
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 24 },
-  statCard: { width: '48%', backgroundColor: 'rgba(30, 41, 59, 0.5)', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', marginBottom: 16 },
+  statCard: { width: '48%', padding: 20, borderRadius: 24, borderWidth: 1, marginBottom: 16 },
   statIconWrapper: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   typeSales: { backgroundColor: 'rgba(59, 130, 246, 0.15)' },
   typePaid: { backgroundColor: 'rgba(34, 197, 94, 0.15)' },
   typeUnpaid: { backgroundColor: 'rgba(245, 158, 11, 0.15)' },
   typeOverdue: { backgroundColor: 'rgba(239, 68, 68, 0.15)' },
-  statLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginBottom: 4 },
-  statValue: { fontSize: 20, fontWeight: '900', color: '#fff', marginBottom: 6 },
+  statLabel: { fontSize: 12, fontWeight: '700', marginBottom: 4 },
+  statValue: { fontSize: 20, fontWeight: '900', marginBottom: 6 },
   statTrend: { fontSize: 11, fontWeight: '800' },
   up: { color: '#4ade80' },
   down: { color: '#f87171' },
-
-  chartCard: { backgroundColor: 'rgba(30, 41, 59, 0.4)', padding: 24, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden' },
+  chartCard: { padding: 24, borderRadius: 28, borderWidth: 1, overflow: 'hidden' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  cardTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
-  cardSub: { fontSize: 12, color: '#64748b', marginTop: 2, fontWeight: '600' },
+  cardTitle: { fontSize: 18, fontWeight: '800' },
+  cardSub: { fontSize: 12, marginTop: 2, fontWeight: '600' },
   chartTag: { backgroundColor: 'rgba(34, 197, 94, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   chartTagText: { color: '#4ade80', fontSize: 11, fontWeight: '800' },
   chart: { marginVertical: 8, marginLeft: -16 },
-  
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 16 },
-  sectionTitle: { fontSize: 17, fontWeight: '800', color: '#fff' },
+  sectionTitle: { fontSize: 17, fontWeight: '800' },
   viewAll: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
-  listCard: { backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', paddingHorizontal: 20 },
-  listItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)' },
-  itemTitle: { fontSize: 14, fontWeight: '800', color: '#f1f5f9' },
-  itemSub: { fontSize: 11, color: '#64748b', marginTop: 4, fontWeight: '600' },
+  listCard: { borderRadius: 28, borderWidth: 1, paddingHorizontal: 20 },
+  listItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1 },
+  itemTitle: { fontSize: 14, fontWeight: '800' },
+  itemSub: { fontSize: 11, marginTop: 4, fontWeight: '600' },
   itemMeta: { alignItems: 'flex-end', gap: 6 },
-  itemValue: { fontSize: 14, fontWeight: '900', color: '#fff' },
+  itemValue: { fontSize: 14, fontWeight: '900' },
   statusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   paid: { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
   unpaid: { backgroundColor: 'rgba(245, 158, 11, 0.1)' },
@@ -336,12 +333,12 @@ const styles = StyleSheet.create({
   tagLow: { backgroundColor: 'rgba(245, 158, 11, 0.1)' },
   tagOut: { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
   tagText: { fontSize: 10, fontWeight: '900', color: '#fbbf24' },
-  emptyMsg: { textAlign: 'center', padding: 30, color: '#475569', fontSize: 14, fontWeight: '600' },
+  emptyMsg: { textAlign: 'center', padding: 30, fontSize: 14, fontWeight: '600' },
   planBadge: { backgroundColor: 'rgba(34, 197, 94, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.2)', marginTop: 6, alignSelf: 'flex-start' },
   planBadgeText: { fontSize: 9, fontWeight: '900', color: '#4ade80', textTransform: 'uppercase', letterSpacing: 0.5 },
   floatingAiBtn: { position: 'absolute', right: 20, backgroundColor: COLORS.primary, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 30, gap: 10, elevation: 12, shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12 },
   aiBtnText: { color: '#fff', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 },
-  smallPrintBtn: { width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(34, 197, 94, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  smallPrintBtn: { width: 28, height: 28, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
 });
 
 export default DashboardScreen;

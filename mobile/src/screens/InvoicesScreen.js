@@ -11,10 +11,8 @@ import axios from 'axios';
 import { SERVER_URL } from '../config';
 import { scale, moderateScale, verticalScale } from '../utils/responsive';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../context/ThemeContext';
 
-
-
-// Filter config: label, status value (matches DB), colors, icon
 const FILTERS = [
   { label: 'All',     status: 'All',     bg: '#6366f1', glass: 'rgba(99, 102, 241, 0.15)', icon: List },
   { label: 'Paid',    status: 'Paid',    bg: '#10b981', glass: 'rgba(16, 185, 129, 0.15)', icon: CheckCircle },
@@ -23,6 +21,7 @@ const FILTERS = [
 ];
 
 const InvoicesScreen = ({ navigation }) => {
+  const { isDark, colors } = useTheme();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,36 +80,15 @@ const InvoicesScreen = ({ navigation }) => {
 
   const handleDownloadPDF = async (item) => {
     try {
-      console.log('Starting PDF generation for:', item.invoice_number);
       setDownloadingId(item.id);
-      
       const url = `${SERVER_URL}/invoices/${item.id}/print`;
-      console.log('Fetching HTML from:', url);
-      
-      // 1. Fetch the HTML from the server
       const response = await axios.get(url, { timeout: 10000 });
       const htmlContent = response.data;
-      console.log('HTML fetched successfully, length:', htmlContent.length);
-
-      // 2. Generate PDF from HTML
-      console.log('Converting HTML to PDF...');
-      const { uri } = await Print.printToFileAsync({
-        html: htmlContent,
-        base64: false
-      });
-      console.log('PDF generated at:', uri);
-
-      // 3. Share/Save the PDF
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `Download Invoice ${item.invoice_number}`,
-        UTI: 'com.adobe.pdf'
-      });
-      
+      const { uri } = await Print.printToFileAsync({ html: htmlContent, base64: false });
+      await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: `Download Invoice ${item.invoice_number}` });
     } catch (error) {
       console.error('PDF Download Error:', error);
-      const msg = error.response ? `Server Error: ${error.response.status}` : error.message;
-      Alert.alert('Download Failed', `Error: ${msg}\n\nPlease check your network and try again.`);
+      Alert.alert('Download Failed', 'Please check your network and try again.');
     } finally {
       setDownloadingId(null);
     }
@@ -118,25 +96,15 @@ const InvoicesScreen = ({ navigation }) => {
 
   const handleWhatsAppShare = (item) => {
     const url = `${SERVER_URL}/invoices/${item.id}/print`;
-    const message = `*ProGst Invoice Sharing*\n\nHello *${item.customer?.name || 'Customer'}*,\n\nYour invoice *${item.invoice_number}* is ready.\n\n*Amount:* ₹ ${parseFloat(item.total_amount).toLocaleString()}\n*Status:* ${item.status}\n\nView/Download Invoice: ${url}\n\nThank you for your business!`;
-    
+    const message = `*ProGst Invoice Sharing*\n\nHello *${item.customer?.name || 'Customer'}*,\n\nYour invoice *${item.invoice_number}* is ready.\n\n*Amount:* ₹ ${parseFloat(item.total_amount).toLocaleString()}\n*Status:* ${item.status}\n\nView/Download Invoice: ${url}`;
     const phone = item.customer?.phone ? item.customer.phone.replace(/\D/g, '') : '';
     const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}${phone ? `&phone=${phone}` : ''}`;
-    
-    Linking.canOpenURL(whatsappUrl).then(supported => {
-      if (supported) {
-        Linking.openURL(whatsappUrl);
-      } else {
-        // Fallback to web link if app not installed
-        const webWhatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        Linking.openURL(webWhatsappUrl);
-      }
-    }).catch(err => console.error('An error occurred', err));
+    Linking.openURL(whatsappUrl).catch(() => Linking.openURL(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`));
   };
 
   if (loading && !refreshing) {
     return (
-      <View style={[styles.mainContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.mainContainer, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -144,44 +112,38 @@ const InvoicesScreen = ({ navigation }) => {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity 
-      style={[styles.invoiceItem, SHADOW.small]} 
+      style={[styles.invoiceItem, { backgroundColor: colors.card, borderColor: colors.border }, SHADOW.small]} 
       onPress={() => handlePrint(item.id)}
       activeOpacity={0.7}
     >
-      <View style={styles.invIcon}>
+      <View style={[styles.invIcon, { backgroundColor: COLORS.primary + '15' }]}>
         <FileText size={20} color={COLORS.primary} />
       </View>
       <View style={styles.invDetails}>
         <View style={styles.invRow}>
-          <Text style={styles.invId}>{item.invoice_number}</Text>
+          <Text style={[styles.invId, { color: colors.text }]}>{item.invoice_number}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={styles.invAmount}>₹ {parseFloat(item.total_amount).toLocaleString()}</Text>
+            <Text style={[styles.invAmount, { color: colors.text }]}>₹ {parseFloat(item.total_amount).toLocaleString()}</Text>
             <TouchableOpacity 
-              style={styles.smallPrintBtn}
-              onPress={(e) => {
-                e.stopPropagation();
-                handlePrint(item.id);
-              }}
+              style={[styles.smallPrintBtn, { backgroundColor: COLORS.primary + '15' }]}
+              onPress={(e) => { e.stopPropagation(); handlePrint(item.id); }}
             >
               <Printer size={16} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
         </View>
         <View style={styles.invRow}>
-          <Text style={styles.invCustomer}>{item.customer?.name || 'Walk-in'}</Text>
+          <Text style={[styles.invCustomer, { color: colors.textMuted }]}>{item.customer?.name || 'Walk-in'}</Text>
           <View style={[styles.badge, styles[`badge${item.status}`]]}>
             <Text style={[styles.badgeText, styles[`badgeText${item.status}`]]}>{item.status}</Text>
           </View>
         </View>
         <View style={styles.invFooter}>
-          <Text style={styles.invDate}>{item.date}</Text>
+          <Text style={[styles.invDate, { color: colors.textMuted }]}>{item.date}</Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity 
               style={[styles.shareIconBtn, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleDownloadPDF(item);
-              }}
+              onPress={(e) => { e.stopPropagation(); handleDownloadPDF(item); }}
               disabled={!!downloadingId}
             >
               {downloadingId === item.id ? (
@@ -193,16 +155,12 @@ const InvoicesScreen = ({ navigation }) => {
                 </>
               )}
             </TouchableOpacity>
-            
             <TouchableOpacity 
-              style={styles.shareIconBtn}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleWhatsAppShare(item);
-              }}
+              style={[styles.shareIconBtn, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}
+              onPress={(e) => { e.stopPropagation(); handleWhatsAppShare(item); }}
             >
               <MessageCircle size={18} color="#22c55e" />
-              <Text style={styles.shareLabel}>Share</Text>
+              <Text style={[styles.shareLabel, { color: '#22c55e' }]}>Share</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -211,31 +169,26 @@ const InvoicesScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.mainContainer}>
-      <LinearGradient
-        colors={['#0f172a', '#1e293b']}
-        style={StyleSheet.absoluteFill}
-      />
-      
-      {/* Decorative spheres */}
-      <View style={[styles.decorCircle, { top: -50, right: -100, width: 300, height: 300, backgroundColor: 'rgba(34, 197, 94, 0.08)' }]} />
-      <View style={[styles.decorCircle, { bottom: 100, left: -150, width: 350, height: 350, backgroundColor: 'rgba(30, 64, 175, 0.06)' }]} />
+    <View style={[styles.mainContainer, { backgroundColor: colors.background }]}>
+      <LinearGradient colors={isDark ? ['#0f172a', '#1e293b'] : ['#f8fafc', '#f1f5f9']} style={StyleSheet.absoluteFill} />
+      <View style={[styles.decorCircle, { top: -50, right: -100, width: 300, height: 300, backgroundColor: isDark ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.05)' }]} />
+      <View style={[styles.decorCircle, { bottom: 100, left: -150, width: 350, height: 350, backgroundColor: isDark ? 'rgba(30, 64, 175, 0.06)' : 'rgba(30, 64, 175, 0.03)' }]} />
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>Invoices</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Invoices</Text>
             <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('CreateInvoice')}>
               <Plus size={24} color="#fff" />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.searchContainer}>
-            <Search size={18} color="#94a3b8" style={styles.searchIcon} />
+          <View style={[styles.searchContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+            <Search size={18} color={colors.textMuted} style={styles.searchIcon} />
             <TextInput 
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search invoices..."
-              placeholderTextColor="#64748b"
+              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
               value={searchTerm}
               onChangeText={setSearchTerm}
             />
@@ -254,27 +207,15 @@ const InvoicesScreen = ({ navigation }) => {
                       styles.chip,
                       isActive
                         ? { backgroundColor: f.bg, borderColor: f.bg }
-                        : { backgroundColor: 'rgba(30, 41, 59, 0.5)', borderColor: 'rgba(255, 255, 255, 0.05)' },
+                        : { backgroundColor: colors.glass, borderColor: colors.border },
                     ]}
                     onPress={() => setFilter(f.status)}
                     activeOpacity={0.8}
                   >
-                    <IconComp
-                      size={scale(13)}
-                      color={isActive ? '#fff' : f.bg}
-                      style={{ marginRight: scale(4) }}
-                    />
-                    <Text style={[styles.chipText, { color: isActive ? '#fff' : '#94a3b8' }]}>
-                      {f.label}
-                    </Text>
-                    <View style={[
-                      styles.chipBadge,
-                      { backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : f.glass },
-                    ]}>
-                      <Text style={[
-                        styles.chipBadgeText,
-                        { color: isActive ? '#fff' : f.bg },
-                      ]}>{count}</Text>
+                    <IconComp size={scale(13)} color={isActive ? '#fff' : f.bg} style={{ marginRight: scale(4) }} />
+                    <Text style={[styles.chipText, { color: isActive ? '#fff' : colors.textMuted }]}>{f.label}</Text>
+                    <View style={[styles.chipBadge, { backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : f.glass }]}>
+                      <Text style={[styles.chipBadgeText, { color: isActive ? '#fff' : f.bg }]}>{count}</Text>
                     </View>
                   </TouchableOpacity>
                 );
@@ -288,17 +229,13 @@ const InvoicesScreen = ({ navigation }) => {
             keyExtractor={item => item.id.toString()}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
-            }
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
             ListEmptyComponent={
               <View style={styles.emptyState}>
-                <FileText size={scale(48)} color="rgba(255,255,255,0.05)" />
-                <Text style={styles.emptyTitle}>No Invoices Found</Text>
-                <Text style={styles.emptySubtitle}>
-                  {filter === 'All'
-                    ? 'Create your first invoice to get started.'
-                    : `No ${filter.toLowerCase()} invoices match your search.`}
+                <FileText size={scale(48)} color={colors.border} />
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>No Invoices Found</Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+                  {filter === 'All' ? 'Create your first invoice to get started.' : `No ${filter.toLowerCase()} invoices match search.`}
                 </Text>
               </View>
             }
@@ -310,209 +247,46 @@ const InvoicesScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  safeArea: {
-    flex: 1,
-  },
-  decorCircle: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: SPACING.md,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.lg,
-    marginTop: 8,
-  },
-  title: {
-    fontSize: moderateScale(28),
-    fontWeight: '800',
-    color: '#fff',
-    letterSpacing: -0.5,
-  },
-  addBtn: {
-    width: scale(48),
-    height: scale(48),
-    borderRadius: scale(24),
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    paddingHorizontal: scale(16),
-    marginBottom: verticalScale(16),
-    height: 52,
-  },
-  searchIcon: {
-    marginRight: scale(8),
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: moderateScale(15),
-    color: '#fff',
-  },
-  filterContainer: {
-    marginBottom: verticalScale(16),
-  },
-  filterScroll: {
-    paddingRight: scale(8),
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: scale(14),
-    paddingVertical: scale(8),
-    borderRadius: 20,
-    borderWidth: 1,
-    marginRight: scale(8),
-  },
-  chipText: {
-    fontSize: moderateScale(13),
-    fontWeight: '800',
-  },
-  chipBadge: {
-    marginLeft: scale(8),
-    minWidth: scale(22),
-    height: scale(22),
-    borderRadius: 11,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: scale(4),
-  },
-  chipBadgeText: {
-    fontSize: moderateScale(10),
-    fontWeight: '900',
-  },
-  listContent: {
-    paddingBottom: verticalScale(120),
-  },
-  invoiceItem: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(30, 41, 59, 0.7)',
-    padding: scale(16),
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    marginBottom: verticalScale(12),
-    alignItems: 'center',
-    gap: scale(12),
-  },
-  invIcon: {
-    width: scale(44),
-    height: scale(44),
-    borderRadius: 14,
-    backgroundColor: 'rgba(34, 197, 94, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  invDetails: {
-    flex: 1,
-  },
-  invRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: verticalScale(2),
-  },
-  invId: {
-    fontSize: moderateScale(14),
-    fontWeight: '800',
-    color: '#fff',
-  },
-  invAmount: {
-    fontSize: moderateScale(15),
-    fontWeight: '900',
-    color: '#fff',
-  },
-  invCustomer: {
-    fontSize: moderateScale(13),
-    color: '#94a3b8',
-    fontWeight: '600',
-  },
-  invDate: {
-    fontSize: moderateScale(11),
-    color: '#64748b',
-    fontWeight: '700',
-  },
-  invFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: verticalScale(4),
-  },
-  shareIconBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-    paddingHorizontal: scale(10),
-    paddingVertical: scale(4),
-    borderRadius: 8,
-    gap: scale(4),
-  },
-  shareLabel: {
-    fontSize: moderateScale(11),
-    color: '#22c55e',
-    fontWeight: '800',
-  },
-  badge: {
-    paddingHorizontal: scale(10),
-    paddingVertical: scale(4),
-    borderRadius: 8,
-  },
-  badgePaid:    { backgroundColor: 'rgba(34, 197, 94, 0.15)' },
-  badgeUnpaid:  { backgroundColor: 'rgba(245, 158, 11, 0.15)' },
+  mainContainer: { flex: 1 },
+  safeArea: { flex: 1 },
+  decorCircle: { position: 'absolute', borderRadius: 999 },
+  container: { flex: 1, paddingHorizontal: SPACING.md },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.lg, marginTop: 8 },
+  title: { fontSize: moderateScale(28), fontWeight: '800', letterSpacing: -0.5 },
+  addBtn: { width: scale(48), height: scale(48), borderRadius: scale(24), backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center', elevation: 4 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, borderWidth: 1, paddingHorizontal: scale(16), marginBottom: verticalScale(16), height: 52 },
+  searchIcon: { marginRight: scale(8) },
+  searchInput: { flex: 1, fontSize: moderateScale(15) },
+  filterContainer: { marginBottom: verticalScale(16) },
+  filterScroll: { paddingRight: scale(8) },
+  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(14), paddingVertical: scale(8), borderRadius: 20, borderWidth: 1, marginRight: scale(8) },
+  chipText: { fontSize: moderateScale(13), fontWeight: '800' },
+  chipBadge: { marginLeft: scale(8), minWidth: scale(22), height: scale(22), borderRadius: 11, justifyContent: 'center', alignItems: 'center', paddingHorizontal: scale(4) },
+  chipBadgeText: { fontSize: moderateScale(10), fontWeight: '900' },
+  listContent: { paddingBottom: verticalScale(120) },
+  invoiceItem: { flexDirection: 'row', padding: scale(16), borderRadius: 24, borderWidth: 1, marginBottom: verticalScale(12), alignItems: 'center', gap: scale(12) },
+  invIcon: { width: scale(44), height: scale(44), borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  invDetails: { flex: 1 },
+  invRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: verticalScale(2) },
+  invId: { fontSize: moderateScale(14), fontWeight: '800' },
+  invAmount: { fontSize: moderateScale(15), fontWeight: '900' },
+  invCustomer: { fontSize: moderateScale(13), fontWeight: '600' },
+  invDate: { fontSize: moderateScale(11), fontWeight: '700' },
+  invFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: verticalScale(4) },
+  shareIconBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: scale(10), paddingVertical: scale(4), borderRadius: 8, gap: scale(4) },
+  shareLabel: { fontSize: moderateScale(11), fontWeight: '800' },
+  badge: { paddingHorizontal: scale(10), paddingVertical: scale(4), borderRadius: 8 },
+  badgePaid: { backgroundColor: 'rgba(34, 197, 94, 0.15)' },
+  badgeUnpaid: { backgroundColor: 'rgba(245, 158, 11, 0.15)' },
   badgeOverdue: { backgroundColor: 'rgba(239, 68, 68, 0.15)' },
-  badgeText:         { fontSize: moderateScale(10), fontWeight: '900', textTransform: 'uppercase' },
-  badgeTextPaid:     { color: '#4ade80' },
-  badgeTextUnpaid:   { color: '#fbbf24' },
-  badgeTextOverdue:  { color: '#f87171' },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: verticalScale(80),
-    paddingHorizontal: scale(32),
-  },
-  emptyTitle: {
-    fontSize: moderateScale(18),
-    fontWeight: '800',
-    color: '#fff',
-    marginTop: verticalScale(16),
-  },
-  emptySubtitle: {
-    fontSize: moderateScale(14),
-    color: '#64748b',
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: moderateScale(22),
-  },
-  smallPrintBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  badgeText: { fontSize: moderateScale(10), fontWeight: '900', textTransform: 'uppercase' },
+  badgeTextPaid: { color: '#4ade80' },
+  badgeTextUnpaid: { color: '#fbbf24' },
+  badgeTextOverdue: { color: '#f87171' },
+  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: verticalScale(80), paddingHorizontal: scale(32) },
+  emptyTitle: { fontSize: moderateScale(18), fontWeight: '800', marginTop: verticalScale(16) },
+  emptySubtitle: { fontSize: moderateScale(14), textAlign: 'center', marginTop: 8, lineHeight: moderateScale(22) },
+  smallPrintBtn: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
 });
 
 export default InvoicesScreen;

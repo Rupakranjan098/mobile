@@ -8,10 +8,10 @@ import { getProducts, getProductByBarcode, deleteProduct, createProduct } from '
 import { scale, moderateScale, verticalScale, SCREEN_WIDTH } from '../utils/responsive';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-
-
+import { useTheme } from '../context/ThemeContext';
 
 const ProductsScreen = () => {
+  const { isDark, colors } = useTheme();
   const insets = useSafeAreaInsets();
   const scanned = useRef(false);
   const [products, setProducts] = useState([]);
@@ -54,7 +54,6 @@ const ProductsScreen = () => {
       Alert.alert('Validation Error', 'Please enter the Price manually.');
       return;
     }
-
     try {
       setLoading(true);
       await createProduct(newProduct);
@@ -64,7 +63,6 @@ const ProductsScreen = () => {
       fetchProducts();
       Alert.alert('Success', 'Product added successfully');
     } catch (error) {
-      console.error('API Error:', error.response?.data);
       Alert.alert('Error', 'Failed to add product.');
     } finally {
       setLoading(false);
@@ -108,7 +106,6 @@ const ProductsScreen = () => {
     scanned.current = false;
     setIsScanning(true);
     setIsScanningFromModal(fromModal || false);
-    
     Animated.loop(
       Animated.sequence([
         Animated.timing(scanLineAnim, { toValue: 240, duration: 2000, useNativeDriver: true }),
@@ -120,21 +117,17 @@ const ProductsScreen = () => {
   const onBarcodeScanned = async ({ data }) => {
     if (scanned.current || isSearchingAPI || !isScanning) return;
     scanned.current = true;
-    setScannedData(data);
     Vibration.vibrate(100);
     setIsSearchingAPI(true);
     try {
       const response = await getProductByBarcode(data);
       const { source, product } = response.data;
-      
       setIsSearchingAPI(false);
       setIsScanning(false);
-      
       if (source === 'local') {
         Alert.alert('In Stock', `"${product.name}" is already in your inventory.`);
         return;
       }
-      
       setNewProduct({
         name: product.name || '',
         price: product.price ? String(product.price) : '',
@@ -145,7 +138,6 @@ const ProductsScreen = () => {
       });
       setShowAddModal(true);
     } catch (error) {
-      console.error('Scan lookup error:', error);
       setIsSearchingAPI(false);
       setIsScanning(false);
       setNewProduct({ ...initialProductState, barcode: data });
@@ -160,23 +152,23 @@ const ProductsScreen = () => {
   );
 
   const renderItem = ({ item }) => (
-    <View style={[styles.productItem, SHADOW.small]}>
-      <View style={styles.productImage}>
+    <View style={[styles.productItem, { backgroundColor: colors.card, borderColor: colors.border }, SHADOW.small]}>
+      <View style={[styles.productImage, { backgroundColor: COLORS.primary + '15' }]}>
         <Package size={24} color={COLORS.primary} />
       </View>
       <View style={styles.productInfo}>
         <View style={styles.productTop}>
-          <Text style={styles.productName}>{item.name}</Text>
+          <Text style={[styles.productName, { color: colors.text }]}>{item.name}</Text>
           <TouchableOpacity onPress={() => handleDelete(item.id, item.name)}>
             <Trash2 size={16} color="#f87171" />
           </TouchableOpacity>
         </View>
         <View style={styles.productMid}>
-          <Text style={styles.productHsn}>HSN: {item.hsn || 'N/A'}</Text>
-          <Text style={styles.productStockCount}>Stock: {item.stock} {item.unit}</Text>
+          <Text style={[styles.productHsn, { color: colors.textMuted }]}>HSN: {item.hsn || 'N/A'}</Text>
+          <Text style={[styles.productStockCount, { color: colors.textMuted }]}>Stock: {item.stock} {item.unit}</Text>
         </View>
         <View style={styles.productBottom}>
-          <Text style={styles.productPrice}>₹ {parseFloat(item.price).toLocaleString()}</Text>
+          <Text style={[styles.productPrice, { color: colors.text }]}>₹ {parseFloat(item.price).toLocaleString()}</Text>
           <View style={[styles.statusTag, item.stock > 0 ? styles.tagIn : styles.tagOut]}>
             <Text style={styles.tagText}>{item.stock > 0 ? 'IN STOCK' : 'OUT'}</Text>
           </View>
@@ -186,26 +178,26 @@ const ProductsScreen = () => {
   );
 
   return (
-    <View style={styles.mainContainer}>
-      <LinearGradient colors={['#0f172a', '#1e293b']} style={StyleSheet.absoluteFill} />
-      <View style={[styles.decorCircle, { top: -50, right: -100, width: 300, height: 300, backgroundColor: 'rgba(34, 197, 94, 0.08)' }]} />
-      <View style={[styles.decorCircle, { bottom: 100, left: -150, width: 350, height: 350, backgroundColor: 'rgba(30, 64, 175, 0.06)' }]} />
+    <View style={[styles.mainContainer, { backgroundColor: colors.background }]}>
+      <LinearGradient colors={isDark ? ['#0f172a', '#1e293b'] : ['#f8fafc', '#f1f5f9']} style={StyleSheet.absoluteFill} />
+      <View style={[styles.decorCircle, { top: -50, right: -100, width: 300, height: 300, backgroundColor: isDark ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.05)' }]} />
+      <View style={[styles.decorCircle, { bottom: 100, left: -150, width: 350, height: 350, backgroundColor: isDark ? 'rgba(30, 64, 175, 0.06)' : 'rgba(30, 64, 175, 0.03)' }]} />
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>Inventory</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Inventory</Text>
             <TouchableOpacity style={styles.addBtn} onPress={() => handleScan(false)}>
               <Scan size={24} color="#fff" />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.searchContainer}>
-            <Search size={18} color="#94a3b8" style={styles.searchIcon} />
+          <View style={[styles.searchContainer, { backgroundColor: colors.glass, borderColor: colors.border }]}>
+            <Search size={18} color={colors.textMuted} style={styles.searchIcon} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search products..."
-              placeholderTextColor="#64748b"
+              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
               value={searchTerm}
               onChangeText={setSearchTerm}
             />
@@ -219,115 +211,62 @@ const ProductsScreen = () => {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Package size={48} color="rgba(255,255,255,0.05)" />
-                <Text style={styles.emptyText}>No products found</Text>
+                <Package size={48} color={colors.border} />
+                <Text style={[styles.emptyText, { color: colors.textMuted }]}>No products found</Text>
               </View>
             }
           />
         </View>
       </SafeAreaView>
 
-      {/* Add Product Modal */}
       <Modal visible={showAddModal} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalContent}>
-            <View style={styles.modalCard}>
+            <View style={[styles.modalCard, { backgroundColor: isDark ? '#1e293b' : '#fff' }]}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>New Product</Text>
-                <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                  <X size={24} color="#94a3b8" />
-                </TouchableOpacity>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>New Product</Text>
+                <TouchableOpacity onPress={() => setShowAddModal(false)}><X size={24} color={colors.textMuted} /></TouchableOpacity>
               </View>
-
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.formGroup}>
-                  <Text style={styles.label}>Product Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={newProduct.name}
-                    onChangeText={(t) => setNewProduct({ ...newProduct, name: t })}
-                    placeholder="Enter name"
-                    placeholderTextColor="#64748b"
-                  />
+                  <Text style={[styles.label, { color: colors.textMuted }]}>Product Name</Text>
+                  <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={newProduct.name} onChangeText={(t) => setNewProduct({ ...newProduct, name: t })} placeholder="Enter name" placeholderTextColor={colors.textMuted} />
                 </View>
-
                 <View style={styles.formRow}>
                   <View style={[styles.formGroup, { flex: 1, marginRight: 10 }]}>
-                    <Text style={styles.label}>Price (₹)</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newProduct.price}
-                      keyboardType="numeric"
-                      onChangeText={(t) => setNewProduct({ ...newProduct, price: t })}
-                      placeholder="0.00"
-                      placeholderTextColor="#64748b"
-                    />
+                    <Text style={[styles.label, { color: colors.textMuted }]}>Price (₹)</Text>
+                    <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={newProduct.price} keyboardType="numeric" onChangeText={(t) => setNewProduct({ ...newProduct, price: t })} placeholder="0.00" placeholderTextColor={colors.textMuted} />
                   </View>
                   <View style={[styles.formGroup, { flex: 1 }]}>
-                    <Text style={styles.label}>Stock</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newProduct.stock}
-                      keyboardType="numeric"
-                      onChangeText={(t) => setNewProduct({ ...newProduct, stock: t })}
-                      placeholder="0"
-                      placeholderTextColor="#64748b"
-                    />
+                    <Text style={[styles.label, { color: colors.textMuted }]}>Stock</Text>
+                    <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={newProduct.stock} keyboardType="numeric" onChangeText={(t) => setNewProduct({ ...newProduct, stock: t })} placeholder="0" placeholderTextColor={colors.textMuted} />
                   </View>
                 </View>
-
                 <View style={styles.formGroup}>
-                  <Text style={styles.label}>HSN Code</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={newProduct.hsn}
-                    onChangeText={(t) => setNewProduct({ ...newProduct, hsn: t })}
-                    placeholder="Optional"
-                    placeholderTextColor="#64748b"
-                  />
+                  <Text style={[styles.label, { color: colors.textMuted }]}>HSN Code</Text>
+                  <TextInput style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={newProduct.hsn} onChangeText={(t) => setNewProduct({ ...newProduct, hsn: t })} placeholder="Optional" placeholderTextColor={colors.textMuted} />
                 </View>
-
-                <TouchableOpacity style={styles.saveBtn} onPress={handleAddProduct}>
-                  <Text style={styles.saveBtnText}>SAVE PRODUCT</Text>
-                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveBtn} onPress={handleAddProduct}><Text style={styles.saveBtnText}>SAVE PRODUCT</Text></TouchableOpacity>
               </ScrollView>
             </View>
           </KeyboardAvoidingView>
         </View>
       </Modal>
 
-      {/* Full Screen Camera Modal */}
       <Modal visible={isScanning && !isScanningFromModal} animationType="fade">
         <View style={styles.cameraContainer}>
-          <CameraView
-            style={StyleSheet.absoluteFill}
-            facing="back"
-            enableTorch={isFlashOn}
-            onBarcodeScanned={onBarcodeScanned}
-            barcodeScannerSettings={{
-              barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'pdf417'],
-            }}
-          />
+          <CameraView style={StyleSheet.absoluteFill} facing="back" enableTorch={isFlashOn} onBarcodeScanned={onBarcodeScanned} />
           <SafeAreaView style={styles.cameraOverlay}>
             <View style={styles.cameraHeader}>
-              <TouchableOpacity onPress={() => setIsScanning(false)}>
-                <X size={28} color="#fff" />
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setIsScanning(false)}><X size={28} color="#fff" /></TouchableOpacity>
               <Text style={styles.cameraTitle}>Scan Barcode</Text>
-              <TouchableOpacity onPress={() => setIsFlashOn(!isFlashOn)}>
-                <Text style={{ fontSize: 24 }}>{isFlashOn ? '⚡' : '🔦'}</Text>
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setIsFlashOn(!isFlashOn)}><Text style={{ fontSize: 24 }}>{isFlashOn ? '⚡' : '🔦'}</Text></TouchableOpacity>
             </View>
             <View style={styles.scanTarget}>
-              <View style={[styles.scanCorner, styles.tl]} />
-              <View style={[styles.scanCorner, styles.tr]} />
-              <View style={[styles.scanCorner, styles.bl]} />
-              <View style={[styles.scanCorner, styles.br]} />
+              <View style={[styles.scanCorner, styles.tl]} /><View style={[styles.scanCorner, styles.tr]} /><View style={[styles.scanCorner, styles.bl]} /><View style={[styles.scanCorner, styles.br]} />
               <Animated.View style={[styles.scanLine, { transform: [{ translateY: scanLineAnim }] }]} />
             </View>
-            <Text style={styles.scanPrompt}>
-              {isSearchingAPI ? 'Searching for product details...' : 'Align barcode within the frame'}
-            </Text>
+            <Text style={styles.scanPrompt}>{isSearchingAPI ? 'Searching...' : 'Align barcode within frame'}</Text>
           </SafeAreaView>
         </View>
       </Modal>
@@ -336,42 +275,42 @@ const ProductsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: '#0f172a' },
+  mainContainer: { flex: 1 },
   safeArea: { flex: 1 },
   decorCircle: { position: 'absolute', borderRadius: 999 },
   container: { flex: 1, paddingHorizontal: SPACING.md },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, marginTop: 8 },
-  title: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  title: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
   addBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(15, 23, 42, 0.6)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', paddingHorizontal: 16, marginBottom: 20, height: 52 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, borderWidth: 1, paddingHorizontal: 16, marginBottom: 20, height: 52 },
   searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 15, color: '#fff' },
+  searchInput: { flex: 1, fontSize: 15 },
   listContent: { paddingBottom: 120 },
-  productItem: { flexDirection: 'row', backgroundColor: 'rgba(30, 41, 59, 0.7)', padding: 16, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)', marginBottom: 12, alignItems: 'center', gap: 16 },
-  productImage: { width: 56, height: 56, backgroundColor: 'rgba(34, 197, 94, 0.1)', borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  productItem: { flexDirection: 'row', padding: 16, borderRadius: 24, borderWidth: 1, marginBottom: 12, alignItems: 'center', gap: 16 },
+  productImage: { width: 56, height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   productInfo: { flex: 1 },
   productTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  productName: { fontSize: 15, fontWeight: '800', color: '#fff' },
+  productName: { fontSize: 15, fontWeight: '800' },
   productMid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  productHsn: { fontSize: 11, color: '#94a3b8', fontWeight: '600' },
-  productStockCount: { fontSize: 11, color: '#94a3b8', fontWeight: '600' },
+  productHsn: { fontSize: 11, fontWeight: '600' },
+  productStockCount: { fontSize: 11, fontWeight: '600' },
   productBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  productPrice: { fontSize: 16, fontWeight: '900', color: '#fff' },
+  productPrice: { fontSize: 16, fontWeight: '900' },
   statusTag: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   tagIn: { backgroundColor: 'rgba(34, 197, 94, 0.15)' },
   tagOut: { backgroundColor: 'rgba(239, 68, 68, 0.15)' },
   tagText: { fontSize: 9, fontWeight: '900', color: '#4ade80' },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
-  emptyText: { color: '#64748b', fontSize: 15, marginTop: 12, fontWeight: '600' },
+  emptyText: { fontSize: 15, marginTop: 12, fontWeight: '600' },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modalContent: { width: '100%' },
-  modalCard: { backgroundColor: '#1e293b', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  modalCard: { borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  modalTitle: { fontSize: 20, fontWeight: '800' },
   formGroup: { marginBottom: 16 },
   formRow: { flexDirection: 'row', marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '700', color: '#94a3b8', marginBottom: 8, marginLeft: 4 },
-  input: { backgroundColor: 'rgba(15, 23, 42, 0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 16, height: 52, color: '#fff', fontSize: 15 },
+  label: { fontSize: 13, fontWeight: '700', marginBottom: 8, marginLeft: 4 },
+  input: { borderRadius: 16, borderWidth: 1, paddingHorizontal: 16, height: 52, fontSize: 15 },
   saveBtn: { backgroundColor: COLORS.primary, height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
   saveBtnText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 1 },
   cameraContainer: { flex: 1, backgroundColor: '#000' },
@@ -384,7 +323,7 @@ const styles = StyleSheet.create({
   tr: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 20 },
   bl: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 20 },
   br: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 20 },
-  scanLine: { width: '90%', height: 2, backgroundColor: COLORS.primary, shadowColor: COLORS.primary, shadowOpacity: 1, shadowRadius: 10, elevation: 10 },
+  scanLine: { width: '90%', height: 2, backgroundColor: COLORS.primary },
   scanPrompt: { color: '#fff', fontSize: 14, fontWeight: '700', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 },
 });
 
