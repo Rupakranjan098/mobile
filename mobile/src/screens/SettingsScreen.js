@@ -67,8 +67,19 @@ const SettingsScreen = ({ onLogout }) => {
       setEditData({ name: profileRes.data.name, gstin: profileRes.data.gstin, address: profileRes.data.address });
       setPlans(plansRes.data);
       setAppSettings(settingsRes.data);
-      setFaqs(faqRes.data);
-      setSupportContact(supportRes.data);
+
+      setFaqs(faqRes.data.length > 0 ? faqRes.data : [
+        { question: 'How do I generate a GST invoice?', answer: 'Go to the Dashboard and tap the "+" button in the Recent Invoices section.' },
+        { question: 'Can I sync data across devices?', answer: 'Yes! Just sign in with the same account on any device to access your data.' },
+        { question: 'How to add my own business logo?', answer: 'Go to Settings > Business Profile and tap on the circular avatar to upload your logo.' }
+      ]);
+
+      setSupportContact(supportRes.data || {
+        email: 'support@progst.com',
+        phone: '+91 98765 43210',
+        timing: 'Mon-Fri, 9AM - 6PM'
+      });
+      
       await AsyncStorage.setItem('user', JSON.stringify(userRes.data));
     } catch (error) {
       console.error('Error loading settings data:', error);
