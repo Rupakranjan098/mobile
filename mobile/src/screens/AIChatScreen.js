@@ -98,7 +98,7 @@ const AIChatScreen = ({ navigation }) => {
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
           style={styles.container} 
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 25}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
           <ScrollView ref={scrollViewRef} style={styles.chatContainer} contentContainerStyle={styles.chatContent} showsVerticalScrollIndicator={false}>
             {messages.map((msg) => (
