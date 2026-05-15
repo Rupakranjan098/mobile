@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Alert, RefreshControl, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, FileText, Plus, CheckCircle, Clock, AlertCircle, List, Share2, MessageCircle } from 'lucide-react-native';
+import { Search, FileText, Plus, CheckCircle, Clock, AlertCircle, List, Share2, MessageCircle, Printer } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { getInvoices } from '../services/api';
 import * as WebBrowser from 'expo-web-browser';
@@ -113,7 +113,18 @@ const InvoicesScreen = ({ navigation }) => {
       <View style={styles.invDetails}>
         <View style={styles.invRow}>
           <Text style={styles.invId}>{item.invoice_number}</Text>
-          <Text style={styles.invAmount}>₹ {parseFloat(item.total_amount).toLocaleString()}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={styles.invAmount}>₹ {parseFloat(item.total_amount).toLocaleString()}</Text>
+            <TouchableOpacity 
+              style={styles.smallPrintBtn}
+              onPress={(e) => {
+                e.stopPropagation();
+                handlePrint(item.id);
+              }}
+            >
+              <Printer size={16} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.invRow}>
           <Text style={styles.invCustomer}>{item.customer?.name || 'Walk-in'}</Text>
@@ -432,6 +443,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     lineHeight: moderateScale(22),
+  },
+  smallPrintBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

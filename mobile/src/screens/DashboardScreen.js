@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TrendingUp, TrendingDown, ChevronRight, Sparkles, Plus, ScanLine, FileBarChart, PieChart } from 'lucide-react-native';
+import { TrendingUp, TrendingDown, ChevronRight, Sparkles, Plus, ScanLine, FileBarChart, PieChart, Printer } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { getDashboardData } from '../services/api';
 import { LineChart } from 'react-native-chart-kit';
@@ -10,6 +10,8 @@ import { scale, verticalScale, moderateScale, SCREEN_WIDTH } from '../utils/resp
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as WebBrowser from 'expo-web-browser';
+import { SERVER_URL } from '../config';
 
 
 
@@ -46,6 +48,15 @@ const DashboardScreen = () => {
     setRefreshing(true);
     fetchInitialData();
   }, []);
+  
+  const handlePrint = async (id) => {
+    const url = `${SERVER_URL}/invoices/${id}/print?auto=true`;
+    try {
+      await WebBrowser.openBrowserAsync(url);
+    } catch (error) {
+      console.error("Couldn't load page", error);
+    }
+  };
 
   if (loading && !refreshing) {
     return (
@@ -197,18 +208,27 @@ const DashboardScreen = () => {
 
           <View style={[styles.listCard, SHADOW.small]}>
             {dashboardData.recentInvoices?.map((invoice, i) => (
-              <View key={invoice.id} style={[styles.listItem, i === dashboardData.recentInvoices.length - 1 && { borderBottomWidth: 0 }]}>
+              <TouchableOpacity 
+                key={invoice.id} 
+                style={[styles.listItem, i === dashboardData.recentInvoices.length - 1 && { borderBottomWidth: 0 }]}
+                onPress={() => handlePrint(invoice.id)}
+              >
                 <View>
                   <Text style={styles.itemTitle}>{invoice.customer?.name || 'Walk-in'}</Text>
                   <Text style={styles.itemSub}>{new Date(invoice.date).toLocaleDateString()}</Text>
                 </View>
                 <View style={styles.itemMeta}>
-                  <Text style={styles.itemValue}>₹{parseFloat(invoice.total_amount).toLocaleString()}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={styles.itemValue}>₹{parseFloat(invoice.total_amount).toLocaleString()}</Text>
+                    <View style={styles.smallPrintBtn}>
+                      <Printer size={14} color={COLORS.primary} />
+                    </View>
+                  </View>
                   <View style={[styles.statusPill, styles[invoice.status?.toLowerCase()]]}>
                     <Text style={[styles.statusText, styles[`text${invoice.status}`]]}>{invoice.status}</Text>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
 
@@ -321,6 +341,7 @@ const styles = StyleSheet.create({
   planBadgeText: { fontSize: 9, fontWeight: '900', color: '#4ade80', textTransform: 'uppercase', letterSpacing: 0.5 },
   floatingAiBtn: { position: 'absolute', right: 20, backgroundColor: COLORS.primary, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 30, gap: 10, elevation: 12, shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12 },
   aiBtnText: { color: '#fff', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 },
+  smallPrintBtn: { width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(34, 197, 94, 0.1)', justifyContent: 'center', alignItems: 'center' },
 });
 
 export default DashboardScreen;
