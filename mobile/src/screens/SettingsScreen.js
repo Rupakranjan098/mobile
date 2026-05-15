@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Platform, Switch } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Check, Zap, Crown, Target, Rocket, ArrowRight } from 'lucide-react-native';
+import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Check, Zap, Crown, Target, Rocket, ArrowRight, Moon, Sun } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SERVER_URL } from '../config';
@@ -37,6 +37,7 @@ const SettingsScreen = ({ onLogout }) => {
   const [plansModalVisible, setPlansModalVisible] = useState(false);
 
   const [notifModalVisible, setNotifModalVisible] = useState(false);
+  const [themeModalVisible, setThemeModalVisible] = useState(false);
   const [supportModalVisible, setSupportModalVisible] = useState(false);
 
   const [editData, setEditData] = useState({ name: '', gstin: '', address: '' });
@@ -268,6 +269,12 @@ const SettingsScreen = ({ onLogout }) => {
           <Text style={styles.sectionLabel}>PREFERENCES</Text>
           <View style={styles.settingsGroup}>
             <SettingsItem icon={Bell} label="Notifications" onClick={() => setNotifModalVisible(true)} />
+            <SettingsItem 
+              icon={appSettings.theme === 'dark' ? Moon : Sun} 
+              label="Appearance" 
+              value={appSettings.theme === 'dark' ? 'Dark Mode' : 'Light Mode'} 
+              onClick={() => setThemeModalVisible(true)} 
+            />
             <SettingsItem icon={HelpCircle} label="Help & FAQs" onClick={() => setSupportModalVisible(true)} />
           </View>
 
@@ -440,6 +447,52 @@ const SettingsScreen = ({ onLogout }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Theme Modal */}
+      <Modal visible={themeModalVisible} animationType="slide" transparent>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Appearance</Text>
+              <TouchableOpacity onPress={() => setThemeModalVisible(false)}><X size={24} color="#94a3b8" /></TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.themeOption, appSettings.theme === 'light' && styles.themeOptionActive]}
+              onPress={() => {
+                handleNotificationToggle('theme', 'light');
+                setThemeModalVisible(false);
+              }}
+            >
+              <View style={[styles.themeIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+                <Sun size={20} color="#f59e0b" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.themeOptionTitle}>Light Mode</Text>
+                <Text style={styles.themeOptionDesc}>Bright and clear for daytime use.</Text>
+              </View>
+              {appSettings.theme === 'light' && <Check size={20} color={COLORS.primary} />}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.themeOption, appSettings.theme === 'dark' && styles.themeOptionActive]}
+              onPress={() => {
+                handleNotificationToggle('theme', 'dark');
+                setThemeModalVisible(false);
+              }}
+            >
+              <View style={[styles.themeIconBox, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]}>
+                <Moon size={20} color="#818cf8" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.themeOptionTitle}>Dark Mode</Text>
+                <Text style={styles.themeOptionDesc}>Easier on the eyes in low light.</Text>
+              </View>
+              {appSettings.theme === 'dark' && <Check size={20} color={COLORS.primary} />}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -512,6 +565,11 @@ const styles = StyleSheet.create({
   notifDesc: { fontSize: 13, color: '#94a3b8', lineHeight: 18 },
   infoBox: { flexDirection: 'row', gap: 12, backgroundColor: 'rgba(15, 23, 42, 0.4)', padding: 16, borderRadius: 16, alignItems: 'center' },
   infoBoxText: { flex: 1, fontSize: 12, color: '#64748b', fontWeight: '500', lineHeight: 18 },
+  themeOption: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16, borderRadius: 20, marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'transparent' },
+  themeOptionActive: { borderColor: COLORS.primary + '40', backgroundColor: COLORS.primary + '05' },
+  themeIconBox: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  themeOptionTitle: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 2 },
+  themeOptionDesc: { fontSize: 12, color: '#94a3b8' },
 });
 
 export default SettingsScreen;
