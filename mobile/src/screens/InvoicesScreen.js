@@ -28,6 +28,7 @@ const InvoicesScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('All');
+  const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
     fetchInvoices();
@@ -80,18 +81,24 @@ const InvoicesScreen = ({ navigation }) => {
 
   const handleDownloadPDF = async (item) => {
     try {
-      setLoading(true);
+      console.log('Starting PDF generation for:', item.invoice_number);
+      setDownloadingId(item.id);
+      
       const url = `${SERVER_URL}/invoices/${item.id}/print`;
+      console.log('Fetching HTML from:', url);
       
       // 1. Fetch the HTML from the server
-      const response = await axios.get(url);
+      const response = await axios.get(url, { timeout: 10000 });
       const htmlContent = response.data;
+      console.log('HTML fetched successfully, length:', htmlContent.length);
 
       // 2. Generate PDF from HTML
+      console.log('Converting HTML to PDF...');
       const { uri } = await Print.printToFileAsync({
         html: htmlContent,
         base64: false
       });
+      console.log('PDF generated at:', uri);
 
       // 3. Share/Save the PDF
       await Sharing.shareAsync(uri, {
@@ -101,10 +108,11 @@ const InvoicesScreen = ({ navigation }) => {
       });
       
     } catch (error) {
-      console.error('PDF Generation Error:', error);
-      Alert.alert('Download Failed', 'Could not generate PDF. Please try again.');
+      console.error('PDF Download Error:', error);
+      const msg = error.response ? `Server Error: ${error.response.status}` : error.message;
+      Alert.alert('Download Failed', `Error: ${msg}\n\nPlease check your network and try again.`);
     } finally {
-      setLoading(false);
+      setDownloadingId(null);
     }
   };
 
@@ -174,9 +182,16 @@ const InvoicesScreen = ({ navigation }) => {
                 e.stopPropagation();
                 handleDownloadPDF(item);
               }}
+              disabled={!!downloadingId}
             >
-              <FileText size={16} color="#3b82f6" />
-              <Text style={[styles.shareLabel, { color: '#3b82f6' }]}>PDF</Text>
+              {downloadingId === item.id ? (
+                <ActivityIndicator size="small" color="#3b82f6" />
+              ) : (
+                <>
+                  <FileText size={16} color="#3b82f6" />
+                  <Text style={[styles.shareLabel, { color: '#3b82f6' }]}>PDF</Text>
+                </>
+              )}
             </TouchableOpacity>
             
             <TouchableOpacity 
