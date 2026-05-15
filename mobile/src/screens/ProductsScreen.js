@@ -10,6 +10,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
 
+import { useTheme } from '../context/ThemeContext';
+
+const SCANNER_SETTINGS = {
+  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'pdf417'],
+};
+
 const ProductsScreen = () => {
   const { isDark, colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -115,20 +121,18 @@ const ProductsScreen = () => {
   };
 
   const onBarcodeScanned = async (result) => {
-    const { type, data } = result;
-    if (!data || scanned.current || isSearchingAPI) return;
+    if (!result || !result.data || scanned.current || isSearchingAPI) return;
     
-    console.log(`[Scanner] Detected ${type} | Data: ${data}`);
+    const { data, type } = result;
+    console.log(`[Scanner] Hit! Type: ${type} | Data: ${data}`);
+    
     scanned.current = true;
     Vibration.vibrate(100);
     setIsSearchingAPI(true);
 
     try {
-      console.log(`[Scanner] Fetching product for barcode: ${data}`);
       const response = await getProductByBarcode(data);
       const { source, product } = response.data;
-      
-      console.log(`[Scanner] Result: source=${source}, name=${product?.name}`);
       
       setIsSearchingAPI(false);
       setIsScanning(false);
@@ -283,13 +287,7 @@ const ProductsScreen = () => {
             facing="back"
             enableTorch={isFlashOn}
             onBarcodeScanned={onBarcodeScanned}
-            barcodeScannerSettings={{
-              barcodeTypes: [
-                'ean13', 'ean8', 'upc_a', 'upc_e', 
-                'code128', 'code39', 'code93', 'itf14',
-                'codabar', 'aztec', 'datamatrix', 'qr', 'pdf417'
-              ],
-            }}
+            barcodeScannerSettings={SCANNER_SETTINGS}
           />
           <SafeAreaView style={styles.cameraOverlay}>
             <View style={styles.cameraHeader}>
