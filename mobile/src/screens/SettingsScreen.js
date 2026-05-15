@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles } from 'lucide-react-native';
+import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Check, Zap, Crown, Target, Rocket } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SERVER_URL } from '../config';
@@ -294,16 +294,77 @@ const SettingsScreen = ({ onLogout }) => {
               <Text style={styles.modalTitle}>Choose Plan</Text>
               <TouchableOpacity onPress={() => setPlansModalVisible(false)}><X size={24} color="#94a3b8" /></TouchableOpacity>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {plans.map((plan) => (
-                <TouchableOpacity key={plan.id} style={styles.planCard} onPress={() => handleSubscribe(plan.id)}>
-                  <View style={styles.planInfo}>
-                    <Text style={styles.planName}>{plan.name}</Text>
-                    <Text style={styles.planPrice}>₹{parseFloat(plan.price).toLocaleString()}</Text>
-                  </View>
-                  <Text style={styles.planDesc}>{plan.description}</Text>
-                </TouchableOpacity>
-              ))}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+              {plans.map((plan, index) => {
+                const isPremium = plan.price > 500 || plan.name.toLowerCase().includes('annual');
+                const isQuarterly = plan.name.toLowerCase().includes('quarterly');
+                
+                let PlanIcon = Zap;
+                let gradient = ['rgba(30, 41, 59, 0.5)', 'rgba(15, 23, 42, 0.5)'];
+                let highlightColor = COLORS.primary;
+
+                if (isPremium) {
+                  PlanIcon = Crown;
+                  gradient = ['rgba(99, 102, 241, 0.15)', 'rgba(79, 70, 229, 0.1)'];
+                  highlightColor = '#818cf8';
+                } else if (isQuarterly) {
+                  PlanIcon = Target;
+                  gradient = ['rgba(16, 185, 129, 0.15)', 'rgba(5, 150, 105, 0.1)'];
+                  highlightColor = '#34d399';
+                } else if (plan.name.toLowerCase().includes('half')) {
+                  PlanIcon = Rocket;
+                }
+
+                return (
+                  <TouchableOpacity 
+                    key={plan.id} 
+                    style={[styles.premiumPlanCard, isPremium && styles.popularPlan]} 
+                    onPress={() => handleSubscribe(plan.id)}
+                    activeOpacity={0.8}
+                  >
+                    <LinearGradient colors={gradient} style={styles.planGradient} />
+                    
+                    {isPremium && (
+                      <View style={styles.popularBadge}>
+                        <Sparkles size={10} color="#fff" />
+                        <Text style={styles.popularBadgeText}>BEST VALUE</Text>
+                      </View>
+                    )}
+
+                    <View style={styles.planHeader}>
+                      <View style={[styles.planIconBox, { backgroundColor: highlightColor + '20' }]}>
+                        <PlanIcon size={20} color={highlightColor} />
+                      </View>
+                      <View style={styles.planNameBox}>
+                        <Text style={styles.planName}>{plan.name}</Text>
+                        <View style={styles.priceContainer}>
+                          <Text style={styles.currency}>₹</Text>
+                          <Text style={styles.premiumPlanPrice}>{parseFloat(plan.price).toLocaleString()}</Text>
+                          <Text style={styles.pricePeriod}>/{plan.name.split(' ')[0]}</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <Text style={styles.planDesc}>{plan.description}</Text>
+                    
+                    <View style={styles.planFeatures}>
+                      <View style={styles.featureItem}>
+                        <Check size={14} color={highlightColor} />
+                        <Text style={styles.featureText}>Full AI Analytics</Text>
+                      </View>
+                      <View style={styles.featureItem}>
+                        <Check size={14} color={highlightColor} />
+                        <Text style={styles.featureText}>Cloud Backup</Text>
+                      </View>
+                    </View>
+
+                    <View style={[styles.selectBtn, { borderColor: highlightColor + '40' }]}>
+                      <Text style={[styles.selectBtnText, { color: highlightColor }]}>Upgrade Now</Text>
+                      <ArrowRight size={16} color={highlightColor} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
         </View>
@@ -353,9 +414,27 @@ const styles = StyleSheet.create({
   saveBtnText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 1 },
   planCard: { backgroundColor: 'rgba(15, 23, 42, 0.4)', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', marginBottom: 12 },
   planInfo: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  planName: { fontSize: 16, fontWeight: '800', color: '#fff' },
+  planName: { fontSize: 18, fontWeight: '800', color: '#fff' },
   planPrice: { fontSize: 18, fontWeight: '900', color: COLORS.primary },
-  planDesc: { fontSize: 13, color: '#94a3b8', lineHeight: 18 },
+  planDesc: { fontSize: 13, color: '#94a3b8', lineHeight: 20, marginBottom: 16 },
+
+  premiumPlanCard: { borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', overflow: 'hidden' },
+  planGradient: { ...StyleSheet.absoluteFillObject },
+  popularPlan: { borderColor: 'rgba(99, 102, 241, 0.3)', borderWidth: 1.5 },
+  popularBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: '#6366f1', paddingHorizontal: 12, paddingVertical: 6, borderBottomLeftRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  popularBadgeText: { color: '#fff', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
+  planHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
+  planIconBox: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  planNameBox: { flex: 1 },
+  priceContainer: { flexDirection: 'row', alignItems: 'baseline', gap: 2 },
+  currency: { fontSize: 14, fontWeight: '700', color: '#fff', opacity: 0.8 },
+  premiumPlanPrice: { fontSize: 24, fontWeight: '900', color: '#fff' },
+  pricePeriod: { fontSize: 12, color: '#94a3b8', fontWeight: '600' },
+  planFeatures: { gap: 8, marginBottom: 20 },
+  featureItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  featureText: { fontSize: 13, color: '#e2e8f0', fontWeight: '600' },
+  selectBtn: { height: 48, borderRadius: 14, borderAround: 1, borderWidth: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.03)' },
+  selectBtnText: { fontSize: 14, fontWeight: '800' },
 });
 
 export default SettingsScreen;
