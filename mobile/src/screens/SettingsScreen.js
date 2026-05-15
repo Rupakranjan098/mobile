@@ -27,7 +27,7 @@ const SettingsItem = ({ icon: Icon, label, value, color, onClick }) => (
   </TouchableOpacity>
 );
 
-const SettingsScreen = ({ onLogout }) => {
+const SettingsScreen = ({ navigation, onLogout }) => {
   const { theme, toggleTheme, isDark, colors } = useTheme();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -254,14 +254,14 @@ const SettingsScreen = ({ onLogout }) => {
 
           <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ACCOUNT & SYNC</Text>
           <View style={[styles.settingsGroup, { backgroundColor: colors.glass, borderColor: colors.border }]}>
-            <SettingsItem icon={Briefcase} label="Business Profile" color={colors.text} onClick={() => setModalVisible(true)} />
+            <SettingsItem icon={Briefcase} label="Business Profile" color={colors.text} onClick={() => navigation.navigate('BusinessProfile')} />
             <SettingsItem icon={Users} label="User Details" value={user?.name} color={colors.text} onClick={() => setAccountModalVisible(true)} />
             <SettingsItem icon={RefreshCw} label="Cloud Backup" value={formatLastSync(user?.last_sync_at)} color={colors.text} onClick={handleSync} />
           </View>
 
           <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>SUBSCRIPTION</Text>
           <View style={[styles.settingsGroup, { backgroundColor: colors.glass, borderColor: colors.border }]}>
-            <SettingsItem icon={CreditCard} label="Plan Details" value={user?.subscription_plan?.name || 'Free'} color={COLORS.primary} onClick={() => setPlansModalVisible(true)} />
+            <SettingsItem icon={CreditCard} label="Plan Details" value={user?.subscription_plan?.name || 'Free'} color={COLORS.primary} onClick={() => navigation.navigate('Plans')} />
           </View>
 
           <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>PREFERENCES</Text>
@@ -274,7 +274,7 @@ const SettingsScreen = ({ onLogout }) => {
               color={colors.text}
               onClick={() => setThemeModalVisible(true)} 
             />
-            <SettingsItem icon={HelpCircle} label="Help & FAQs" color={colors.text} onClick={() => setSupportModalVisible(true)} />
+            <SettingsItem icon={HelpCircle} label="Help & Support Center" color={colors.text} onClick={() => navigation.navigate('SupportCenter')} />
           </View>
 
           <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>

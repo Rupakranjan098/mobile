@@ -11,7 +11,7 @@ import HomeNavigator from './HomeNavigator';
 import InvoiceNavigator from './InvoiceNavigator';
 import ProductsScreen from '../screens/ProductsScreen';
 import AIChatScreen from '../screens/AIChatScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import MoreNavigator from './MoreNavigator';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -71,7 +71,7 @@ const TabNavigator = ({ onLogout }) => {
       <Tab.Screen name="Products" component={ProductsScreen} />
       <Tab.Screen name="AI Chat" component={AIChatScreen} />
       <Tab.Screen name="More">
-        {(props) => <SettingsScreen {...props} onLogout={onLogout} />}
+        {(props) => <MoreNavigator {...props} onLogout={onLogout} />}
       </Tab.Screen>
     </Tab.Navigator>
   );
