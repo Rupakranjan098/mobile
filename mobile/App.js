@@ -9,8 +9,18 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from './src/styles/theme';
 import { logout } from './src/services/api';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
+function AppContent() {
+  const { isDark } = useTheme();
   const [user, setUser] = useState(null);
   const [authView, setAuthView] = useState('login');
   const [loading, setLoading] = useState(true);
@@ -90,7 +100,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar style="dark" />
+        <StatusBar style={isDark ? "light" : "dark"} />
         <TabNavigator onLogout={handleLogout} />
       </NavigationContainer>
     </SafeAreaProvider>
