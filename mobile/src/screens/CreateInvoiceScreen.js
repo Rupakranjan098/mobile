@@ -6,10 +6,16 @@ import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { getCustomers, getProducts, createInvoice } from '../services/api';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { getProductDetails } from '../utils/barcodeApi';
+import { useTheme } from '../context/ThemeContext';
+import { scale, moderateScale, verticalScale } from '../utils/responsive';
+import { LinearGradient } from 'expo-linear-gradient';
 
-
+const SCANNER_SETTINGS = {
+  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'pdf417'],
+};
 
 const CreateInvoiceScreen = ({ navigation }) => {
+  const { isDark, colors } = useTheme();
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
@@ -19,61 +25,9 @@ const CreateInvoiceScreen = ({ navigation }) => {
   const [productModal, setProductModal] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isFetchingBarcode, setIsFetchingBarcode] = useState(false);
-  const [lastScanned, setLastScanned] = useState(null);
+  const scanned = useRef(false);
   const [permission, requestPermission] = useCameraPermissions();
   const scanLineAnim = useRef(new Animated.Value(0)).current;
-
-  const startScan = async () => {
-    if (!permission?.granted) {
-      const r = await requestPermission();
-      if (!r.granted) { Alert.alert('Permission Denied', 'Camera access required.'); return; }
-    }
-    setLastScanned(null);
-    setIsScanning(true);
-    Animated.loop(Animated.sequence([
-      Animated.timing(scanLineAnim, { toValue: 260, duration: 2000, useNativeDriver: true }),
-      Animated.timing(scanLineAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
-    ])).start();
-  };
-
-  const onBarcodeScannedForInvoice = async ({ data }) => {
-    if (lastScanned === data || isFetchingBarcode) return;
-    setLastScanned(data);
-    if (data.startsWith('exp://') || data.startsWith('http') || data.includes('192.168')) return;
-    Vibration.vibrate(100);
-    setIsScanning(false);
-    setIsFetchingBarcode(true);
-
-    // Use shared getProductDetails utility
-    // OpenFoodFacts → name, UPCItemDB → price, local HSN_DATA → HSN + GST
-    const result = await getProductDetails(data);
-    setIsFetchingBarcode(false);
-
-    if (!result.found) {
-      Alert.alert('Not Found', `Barcode ${data} not found. Add it to Products first.`);
-      return;
-    }
-
-    // Add or increment item in invoice
-    const existing = items.find(i => i.barcode === data);
-    if (existing) {
-      setItems(items.map(i => i.barcode === data
-        ? { ...i, quantity: i.quantity + 1, total: (i.quantity + 1) * i.price }
-        : i));
-    } else {
-      setItems(prev => [...prev, {
-        product_id: null,
-        barcode: data,
-        name: result.name,
-        price: result.price,
-        quantity: 1,
-        total: result.price,
-        hsn: result.hsn,
-        gst: result.gst,
-        fromScan: true,
-      }]);
-    }
-  };
 
   useEffect(() => {
     fetchInitialData();
@@ -86,7 +40,67 @@ const CreateInvoiceScreen = ({ navigation }) => {
       setProducts(prodRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Failed to load customers or products');
+    }
+  };
+
+  const startScan = async () => {
+    if (!permission?.granted) {
+      const r = await requestPermission();
+      if (!r.granted) { Alert.alert('Permission Denied', 'Camera access required.'); return; }
+    }
+    scanned.current = false;
+    setIsScanning(true);
+    Animated.loop(Animated.sequence([
+      Animated.timing(scanLineAnim, { toValue: 240, duration: 1500, useNativeDriver: true }),
+      Animated.timing(scanLineAnim, { toValue: 0, duration: 1500, useNativeDriver: true }),
+    ])).start();
+  };
+
+  const onBarcodeScannedForInvoice = async (result) => {
+    if (!result || !result.data || scanned.current || isFetchingBarcode) return;
+    const { data } = result;
+    if (data.startsWith('exp://') || data.startsWith('http')) return;
+
+    scanned.current = true;
+    Vibration.vibrate(100);
+    setIsScanning(false);
+    setIsFetchingBarcode(true);
+
+    try {
+      const res = await getProductDetails(data);
+      setIsFetchingBarcode(false);
+
+      if (!res.found) {
+        Alert.alert('Not Found', `Barcode ${data} not found in database.`, [
+          { text: 'OK', onPress: () => { scanned.current = false; } }
+        ]);
+        return;
+      }
+
+      const existing = items.find(i => i.barcode === data);
+      if (existing) {
+        setItems(items.map(i => i.barcode === data
+          ? { ...i, quantity: i.quantity + 1, total: (i.quantity + 1) * i.price }
+          : i));
+      } else {
+        setItems(prev => [...prev, {
+          product_id: res.id || null,
+          barcode: data,
+          name: res.name,
+          price: res.price,
+          quantity: 1,
+          total: res.price,
+          hsn: res.hsn,
+          gst: res.gst,
+          fromScan: true,
+        }]);
+      }
+    } catch (error) {
+      console.error('Scan error:', error);
+      setIsFetchingBarcode(false);
+      Alert.alert('Error', 'Failed to fetch product details.');
+    } finally {
+      scanned.current = false;
     }
   };
 
@@ -109,48 +123,33 @@ const CreateInvoiceScreen = ({ navigation }) => {
 
   const calculateTotals = () => {
     const subTotal = items.reduce((acc, item) => acc + item.total, 0);
-    const discount = 0; // Can be made dynamic later
-    const taxableAmount = subTotal - discount;
+    const taxableAmount = subTotal;
     const cgst = taxableAmount * 0.09;
     const sgst = taxableAmount * 0.09;
     const total = taxableAmount + cgst + sgst;
-    return { subTotal, discount, taxableAmount, cgst, sgst, total };
+    return { subTotal, taxableAmount, cgst, sgst, total };
   };
 
-  const { subTotal, discount, taxableAmount, cgst, sgst, total } = calculateTotals();
+  const { subTotal, taxableAmount, cgst, sgst, total } = calculateTotals();
 
   const handleGenerateInvoice = async () => {
-    if (!selectedCustomer) {
-      Alert.alert('Error', 'Please select a customer');
-      return;
-    }
-    if (items.length === 0) {
-      Alert.alert('Error', 'Please add at least one item');
-      return;
-    }
-
+    if (!selectedCustomer) { Alert.alert('Error', 'Please select a customer'); return; }
+    if (items.length === 0) { Alert.alert('Error', 'Please add items'); return; }
     setLoading(true);
     try {
-      const invoiceData = {
+      await createInvoice({
         customer_id: selectedCustomer.id,
         invoice_number: `INV-${Date.now()}`,
         date: new Date().toISOString().split('T')[0],
         sub_total: subTotal,
         taxable_amount: taxableAmount,
         tax_amount: cgst + sgst,
-        cgst: cgst,
-        sgst: sgst,
-        total_amount: total,
+        cgst, sgst, total_amount: total,
         status: 'Unpaid',
-        items: items
-      };
-
-      await createInvoice(invoiceData);
-      Alert.alert('Success', 'Invoice generated successfully', [
-        { text: 'OK', onPress: () => navigation.navigate('Invoices') }
-      ]);
+        items
+      });
+      Alert.alert('Success', 'Invoice generated!', [{ text: 'OK', onPress: () => navigation.navigate('Invoices') }]);
     } catch (error) {
-      console.error('Error creating invoice:', error.response?.data || error.message);
       Alert.alert('Error', 'Failed to generate invoice');
     } finally {
       setLoading(false);
@@ -158,552 +157,205 @@ const CreateInvoiceScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <ChevronLeft size={24} color={COLORS.textMain} />
-            </TouchableOpacity>
-            <Text style={styles.title}>Create Invoice</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionLabel}>Customer Details</Text>
-        <TouchableOpacity 
-          style={[styles.card, SHADOW.small]}
-          onPress={() => setCustomerModal(true)}
-        >
-          {selectedCustomer ? (
-            <View style={styles.customerInfo}>
-              <View style={styles.customerAvatar}>
-                <User size={20} color={COLORS.primary} />
-              </View>
-              <View style={styles.customerDetails}>
-                <Text style={styles.customerName}>{selectedCustomer.name}</Text>
-                <Text style={styles.customerMeta}>{selectedCustomer.gstin || 'No GSTIN'}</Text>
-                <Text style={styles.customerMeta}>{selectedCustomer.city}, {selectedCustomer.state}</Text>
-              </View>
-              <Check size={20} color={COLORS.primary} />
-            </View>
-          ) : (
-            <View style={styles.placeholderCard}>
-              <User size={24} color={COLORS.textMuted} />
-              <Text style={styles.placeholderText}>Select Customer</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Invoice Items</Text>
-          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-            <TouchableOpacity style={styles.scanItemBtn} onPress={startScan}>
-              {isFetchingBarcode
-                ? <ActivityIndicator size="small" color="#fff" />
-                : <><Scan size={15} color="#fff" /><Text style={styles.scanItemText}>Scan</Text></>}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addItemBtn} onPress={() => setProductModal(true)}>
-              <Plus size={16} color={COLORS.primary} />
-              <Text style={styles.addItemText}>Add Item</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.itemsList}>
-          {items.map((item, index) => (
-            <View key={index} style={[styles.card, SHADOW.small, styles.itemCard]}>
-              <View style={styles.itemMain}>
-                <View style={[styles.itemIcon, item.fromScan && { backgroundColor: '#dcfce7' }]}>
-                  {item.fromScan ? <Scan size={16} color={COLORS.primary} /> : <Package size={16} color={COLORS.textMuted} />}
-                </View>
-                <View style={styles.itemDetails}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                  <Text style={styles.itemMeta}>HSN: {item.hsn || 'N/A'} | ₹{item.price} × {item.quantity}</Text>
-                </View>
-                <View style={styles.itemTotal}>
-                  <Text style={styles.itemTotalValue}>₹{item.total.toLocaleString()}</Text>
-                  <TouchableOpacity onPress={() => setItems(items.filter((_, i) => i !== index))}>
-                    <X size={14} color={COLORS.danger} style={{ marginTop: 4 }} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              {item.fromScan && (
-                <View style={styles.scannedBadge}>
-                  <Zap size={10} color={COLORS.primary} />
-                  <Text style={styles.scannedBadgeText}>Auto-filled from barcode scan</Text>
-                </View>
-              )}
-            </View>
-          ))}
-          {items.length === 0 && (
-            <View style={styles.emptyItemsBox}>
-              <Scan size={32} color={COLORS.border} />
-              <Text style={styles.emptyItems}>Scan a barcode or tap Add Item</Text>
-            </View>
-          )}
-        </View>
-
-        {items.length > 0 && (
-          <>
-            <Text style={styles.sectionLabel}>Price Details</Text>
-            <View style={[styles.card, SHADOW.small, styles.priceCard]}>
-              <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>Sub Total</Text>
-                <Text style={styles.priceValue}>₹ {subTotal.toLocaleString()}</Text>
-              </View>
-              <View style={[styles.priceRow, { marginTop: 8 }]}>
-                <Text style={[styles.priceLabel, { fontWeight: '700', color: COLORS.textMain }]}>Taxable Amount</Text>
-                <Text style={[styles.priceValue, { fontWeight: '700', color: COLORS.textMain }]}>₹ {taxableAmount.toLocaleString()}</Text>
-              </View>
-              <View style={styles.divider} />
-              <View style={styles.taxGrid}>
-                <View style={styles.taxItem}>
-                  <Text style={styles.taxLabel}>CGST (9%)</Text>
-                  <Text style={styles.taxValue}>₹ {cgst.toLocaleString()}</Text>
-                </View>
-                <View style={styles.taxItem}>
-                  <Text style={styles.taxLabel}>SGST (9%)</Text>
-                  <Text style={styles.taxValue}>₹ {sgst.toLocaleString()}</Text>
-                </View>
-              </View>
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Total Amount</Text>
-                <Text style={styles.totalValue}>₹ {total.toLocaleString()}</Text>
-              </View>
-            </View>
-          </>
-        )}
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={[styles.generateBtn, loading && styles.disabledBtn]} 
-          onPress={handleGenerateInvoice}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color={COLORS.textWhite} />
-          ) : (
-            <>
-              <Text style={styles.generateBtnText}>Generate Invoice</Text>
-              <Check size={20} color={COLORS.textWhite} />
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Customer Selection Modal */}
-      <Modal visible={customerModal} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Customer</Text>
-              <TouchableOpacity onPress={() => setCustomerModal(false)}>
-                <Text style={styles.closeBtn}>Close</Text>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={customers}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({item}) => (
-                <TouchableOpacity 
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setSelectedCustomer(item);
-                    setCustomerModal(false);
-                  }}
-                >
-                  <Text style={styles.modalItemName}>{item.name}</Text>
-                  <Text style={styles.modalItemMeta}>{item.gstin || 'No GSTIN'}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Product Selection Modal */}
-      <Modal visible={productModal} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Product</Text>
-              <TouchableOpacity onPress={() => setProductModal(false)}>
-                <Text style={styles.closeBtn}>Close</Text>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={products}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({item}) => (
-                <TouchableOpacity 
-                  style={styles.modalItem}
-                  onPress={() => addItem(item)}
-                >
-                  <Text style={styles.modalItemName}>{item.name}</Text>
-                  <Text style={styles.modalItemMeta}>HSN: {item.hsn} | ₹{item.price}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Barcode Scanner Modal */}
-      <Modal visible={isScanning} animationType="slide">
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#000', alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', padding: 16, alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => setIsScanning(false)} style={styles.scanCloseBtn}>
-              <X size={20} color="#1e293b" />
-            </TouchableOpacity>
-            <Text style={{ fontSize: 18, fontWeight: '800', color: '#fff' }}>Scan Product</Text>
+    <View style={[styles.mainContainer, { backgroundColor: colors.background }]}>
+      <LinearGradient colors={isDark ? ['#0f172a', '#1e293b'] : ['#f8fafc', '#f1f5f9']} style={StyleSheet.absoluteFill} />
+      
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.glass }]}><ChevronLeft size={24} color={colors.text} /></TouchableOpacity>
+            <Text style={[styles.title, { color: colors.text }]}>Create Invoice</Text>
             <View style={{ width: 40 }} />
           </View>
-          <Text style={{ color: '#6b7280', fontSize: 13, textAlign: 'center', marginBottom: 24, paddingHorizontal: 32 }}>
-            Point at product barcode. Name, price & HSN will auto-fill.
-          </Text>
-          <View style={styles.scanCameraBox}>
-            <CameraView
-              style={{ width: '100%', height: '100%' }}
-              facing="back"
-              onBarcodeScanned={onBarcodeScannedForInvoice}
-              barcodeScannerSettings={{ barcodeTypes: ['ean13','ean8','upc_a','upc_e','code128','code39','qr'] }}
-            />
-            <View style={[styles.corner, styles.cTL]} />
-            <View style={[styles.corner, styles.cTR]} />
-            <View style={[styles.corner, styles.cBL]} />
-            <View style={[styles.corner, styles.cBR]} />
-            <Animated.View style={[styles.invoiceScanLine, { transform: [{ translateY: scanLineAnim }] }]} />
-          </View>
-          <Text style={{ color: '#6b7280', marginTop: 24, fontSize: 13 }}>Scanning for barcode…</Text>
-        </SafeAreaView>
-      </Modal>
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>CUSTOMER DETAILS</Text>
+            <TouchableOpacity style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, SHADOW.small]} onPress={() => setCustomerModal(true)}>
+              {selectedCustomer ? (
+                <View style={styles.customerInfo}>
+                  <View style={[styles.customerAvatar, { backgroundColor: COLORS.primary + '15' }]}><User size={20} color={COLORS.primary} /></View>
+                  <View style={styles.customerDetails}>
+                    <Text style={[styles.customerName, { color: colors.text }]}>{selectedCustomer.name}</Text>
+                    <Text style={[styles.customerMeta, { color: colors.textMuted }]}>{selectedCustomer.gstin || 'No GSTIN'}</Text>
+                  </View>
+                  <Check size={20} color={COLORS.primary} />
+                </View>
+              ) : (
+                <View style={styles.placeholderCard}><User size={24} color={colors.textMuted} /><Text style={[styles.placeholderText, { color: colors.textMuted }]}>Select Customer</Text></View>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>INVOICE ITEMS</Text>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <TouchableOpacity style={styles.scanItemBtn} onPress={startScan}>
+                  <Scan size={14} color="#fff" /><Text style={styles.scanItemText}>Scan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.addItemBtn, { backgroundColor: colors.glass, borderColor: colors.border }]} onPress={() => setProductModal(true)}>
+                  <Plus size={14} color={COLORS.primary} /><Text style={[styles.addItemText, { color: COLORS.primary }]}>Add</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.itemsList}>
+              {items.map((item, index) => (
+                <View key={index} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, SHADOW.small, styles.itemCard]}>
+                  <View style={styles.itemMain}>
+                    <View style={[styles.itemIcon, { backgroundColor: colors.glass }]}>{item.fromScan ? <Scan size={16} color={COLORS.primary} /> : <Package size={16} color={colors.textMuted} />}</View>
+                    <View style={styles.itemDetails}>
+                      <Text style={[styles.itemName, { color: colors.text }]}>{item.name}</Text>
+                      <Text style={[styles.itemMeta, { color: colors.textMuted }]}>HSN: {item.hsn || 'N/A'} | ₹{item.price} × {item.quantity}</Text>
+                    </View>
+                    <View style={styles.itemTotal}>
+                      <Text style={[styles.itemTotalValue, { color: colors.text }]}>₹{item.total.toLocaleString()}</Text>
+                      <TouchableOpacity onPress={() => setItems(items.filter((_, i) => i !== index))}><X size={14} color="#f87171" /></TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+              {items.length === 0 && (
+                <View style={[styles.emptyItemsBox, { backgroundColor: colors.glass, borderColor: colors.border }]}><Scan size={32} color={colors.border} /><Text style={[styles.emptyItems, { color: colors.textMuted }]}>Scan barcode or tap Add Item</Text></View>
+              )}
+            </View>
+
+            {items.length > 0 && (
+              <>
+                <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: 32 }]}>PRICE DETAILS</Text>
+                <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, SHADOW.small, styles.priceCard]}>
+                  <View style={styles.priceRow}><Text style={[styles.priceLabel, { color: colors.textMuted }]}>Sub Total</Text><Text style={[styles.priceValue, { color: colors.text }]}>₹ {subTotal.toLocaleString()}</Text></View>
+                  <View style={styles.divider} />
+                  <View style={styles.taxGrid}>
+                    <View style={styles.taxItem}><Text style={[styles.taxLabel, { color: colors.textMuted }]}>CGST (9%)</Text><Text style={[styles.taxValue, { color: colors.text }]}>₹ {cgst.toLocaleString()}</Text></View>
+                    <View style={styles.taxItem}><Text style={[styles.taxLabel, { color: colors.textMuted }]}>SGST (9%)</Text><Text style={[styles.taxValue, { color: colors.text }]}>₹ {sgst.toLocaleString()}</Text></View>
+                  </View>
+                  <View style={[styles.totalRow, { borderTopColor: colors.border }]}>
+                    <Text style={[styles.totalLabel, { color: colors.text }]}>Total Amount</Text>
+                    <Text style={styles.totalValue}>₹ {total.toLocaleString()}</Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+
+      <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: insets.bottom + 16 }]}>
+        <TouchableOpacity style={[styles.generateBtn, loading && styles.disabledBtn]} onPress={handleGenerateInvoice} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <><Text style={styles.generateBtnText}>Generate Invoice</Text><Check size={20} color="#fff" /></>}
+        </TouchableOpacity>
       </View>
-    </SafeAreaView>
+
+      {/* Customer Modal */}
+      <Modal visible={customerModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: isDark ? '#1e293b' : '#fff' }]}>
+            <View style={styles.modalHeader}><Text style={[styles.modalTitle, { color: colors.text }]}>Select Customer</Text><TouchableOpacity onPress={() => setCustomerModal(false)}><X size={24} color={colors.textMuted} /></TouchableOpacity></View>
+            <FlatList data={customers} keyExtractor={item => item.id.toString()} renderItem={({item}) => (
+              <TouchableOpacity style={[styles.modalItem, { borderBottomColor: colors.border }]} onPress={() => { setSelectedCustomer(item); setCustomerModal(false); }}>
+                <Text style={[styles.modalItemName, { color: colors.text }]}>{item.name}</Text>
+                <Text style={[styles.modalItemMeta, { color: colors.textMuted }]}>{item.gstin || 'No GSTIN'}</Text>
+              </TouchableOpacity>
+            )} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Product Modal */}
+      <Modal visible={productModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: isDark ? '#1e293b' : '#fff' }]}>
+            <View style={styles.modalHeader}><Text style={[styles.modalTitle, { color: colors.text }]}>Select Product</Text><TouchableOpacity onPress={() => setProductModal(false)}><X size={24} color={colors.textMuted} /></TouchableOpacity></View>
+            <FlatList data={products} keyExtractor={item => item.id.toString()} renderItem={({item}) => (
+              <TouchableOpacity style={[styles.modalItem, { borderBottomColor: colors.border }]} onPress={() => addItem(item)}>
+                <Text style={[styles.modalItemName, { color: colors.text }]}>{item.name}</Text>
+                <Text style={[styles.modalItemMeta, { color: colors.textMuted }]}>₹{item.price}</Text>
+              </TouchableOpacity>
+            )} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Scanner Modal */}
+      <Modal visible={isScanning} animationType="fade">
+        <View style={styles.cameraContainer}>
+          <CameraView style={StyleSheet.absoluteFill} facing="back" onBarcodeScanned={onBarcodeScannedForInvoice} barcodeScannerSettings={SCANNER_SETTINGS} />
+          <SafeAreaView style={styles.cameraOverlay}>
+            <View style={styles.cameraHeader}><TouchableOpacity onPress={() => setIsScanning(false)}><X size={28} color="#fff" /></TouchableOpacity><Text style={styles.cameraTitle}>Scan Barcode</Text><View style={{ width: 28 }} /></View>
+            <View style={styles.scanTarget}><View style={[styles.scanCorner, styles.tl]} /><View style={[styles.scanCorner, styles.tr]} /><View style={[styles.scanCorner, styles.bl]} /><View style={[styles.scanCorner, styles.br]} /><Animated.View style={[styles.scanLine, { transform: [{ translateY: scanLineAnim }] }]} /></View>
+            <Text style={styles.scanPrompt}>Align barcode within the frame</Text>
+          </SafeAreaView>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: SPACING.md,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.lg,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.textMain,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.textMuted,
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  card: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 16,
-  },
-  customerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  customerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  customerDetails: {
-    flex: 1,
-  },
-  customerName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.textMain,
-  },
-  customerMeta: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-  },
-  placeholderCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  placeholderText: {
-    fontSize: 14,
-    color: COLORS.textMuted,
-    fontWeight: '600',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  addItemBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  addItemText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  scanItemBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: RADIUS.full,
-  },
-  scanItemText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  scannedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 6,
-  },
-  scannedBadgeText: {
-    fontSize: 10,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  emptyItemsBox: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    gap: 10,
-  },
-  scanCloseBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  scanCameraBox: {
-    width: 280, height: 280,
-    borderRadius: 16, overflow: 'hidden',
-    position: 'relative', backgroundColor: '#000',
-  },
-  corner: {
-    position: 'absolute', width: 28, height: 28,
-    borderColor: COLORS.primary, borderWidth: 3,
-  },
-  cTL: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 8 },
-  cTR: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 8 },
-  cBL: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 8 },
-  cBR: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 8 },
-  invoiceScanLine: {
-    position: 'absolute', left: 0, right: 0, height: 2.5,
-    backgroundColor: COLORS.primary,
-    shadowColor: COLORS.primary, shadowOpacity: 1, shadowRadius: 6, elevation: 6,
-  },
-  itemsList: {
-    gap: 12,
-  },
-  itemCard: {
-    padding: 12,
-  },
-  itemMain: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  itemIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  itemDetails: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.textMain,
-  },
-  itemMeta: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-  },
-  itemTotal: {
-    alignItems: 'flex-end',
-  },
-  itemTotalValue: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textMain,
-  },
-  emptyItems: {
-    textAlign: 'center',
-    color: COLORS.textMuted,
-    fontSize: 12,
-    fontStyle: 'italic',
-    marginTop: 10,
-  },
-  priceCard: {
-    padding: 16,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  priceLabel: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-  },
-  priceValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.textMain,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: 12,
-    borderStyle: 'dashed',
-  },
-  taxGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  taxItem: {
-    flex: 1,
-  },
-  taxLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: COLORS.textMuted,
-    marginBottom: 4,
-  },
-  taxValue: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.textMain,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  totalLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.textMain,
-  },
-  totalValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.primary,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.background,
-    padding: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  generateBtn: {
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  disabledBtn: {
-    opacity: 0.7,
-  },
-  generateBtnText: {
-    color: COLORS.textWhite,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: COLORS.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    minHeight: '60%',
-    padding: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.textMain,
-  },
-  closeBtn: {
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
-  modalItem: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  modalItemName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.textMain,
-  },
-  modalItemMeta: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
+  mainContainer: { flex: 1 },
+  safeArea: { flex: 1 },
+  container: { flex: 1, paddingHorizontal: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, marginTop: 8 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 22, fontWeight: '800' },
+  sectionLabel: { fontSize: 11, fontWeight: '800', marginBottom: 12, letterSpacing: 1 },
+  card: { borderRadius: 20, borderWidth: 1, padding: 16 },
+  customerInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  customerAvatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  customerDetails: { flex: 1 },
+  customerName: { fontSize: 16, fontWeight: '800' },
+  customerMeta: { fontSize: 12 },
+  placeholderCard: { flexDirection: 'row', alignItems: 'center', gap: 12, justifyContent: 'center', paddingVertical: 12 },
+  placeholderText: { fontSize: 15, fontWeight: '700' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 32, marginBottom: 12 },
+  addItemBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1 },
+  addItemText: { fontSize: 12, fontWeight: '800' },
+  scanItemBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
+  scanItemText: { fontSize: 12, fontWeight: '800', color: '#fff' },
+  itemsList: { gap: 12 },
+  itemCard: { padding: 12 },
+  itemMain: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  itemIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  itemDetails: { flex: 1 },
+  itemName: { fontSize: 14, fontWeight: '700' },
+  itemMeta: { fontSize: 12, marginTop: 2 },
+  itemTotal: { alignItems: 'flex-end', gap: 4 },
+  itemTotalValue: { fontSize: 14, fontWeight: '800' },
+  emptyItemsBox: { alignItems: 'center', paddingVertical: 40, borderRadius: 24, borderWidth: 1, borderStyle: 'dashed', gap: 12 },
+  emptyItems: { fontSize: 13, fontWeight: '600' },
+  priceCard: { padding: 20 },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  priceLabel: { fontSize: 14, fontWeight: '600' },
+  priceValue: { fontSize: 14, fontWeight: '700' },
+  divider: { height: 1, backgroundColor: 'rgba(0,0,0,0.05)', marginVertical: 16 },
+  taxGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  taxItem: { flex: 1 },
+  taxLabel: { fontSize: 11, fontWeight: '700', marginBottom: 4 },
+  taxValue: { fontSize: 13, fontWeight: '800' },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20, borderTopWidth: 1 },
+  totalLabel: { fontSize: 18, fontWeight: '800' },
+  totalValue: { fontSize: 24, fontWeight: '900', color: COLORS.primary },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 20, borderTopWidth: 1 },
+  generateBtn: { backgroundColor: COLORS.primary, height: 56, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
+  generateBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, height: '70%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 20, fontWeight: '800' },
+  modalItem: { paddingVertical: 16, borderBottomWidth: 1 },
+  modalItemName: { fontSize: 15, fontWeight: '700' },
+  modalItemMeta: { fontSize: 12, marginTop: 4 },
+  cameraContainer: { flex: 1, backgroundColor: '#000' },
+  cameraOverlay: { flex: 1, justifyContent: 'space-between', alignItems: 'center', paddingVertical: 40 },
+  cameraHeader: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingHorizontal: 24, alignItems: 'center' },
+  cameraTitle: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  scanTarget: { width: scale(250), height: scale(250), justifyContent: 'center', alignItems: 'center' },
+  scanCorner: { position: 'absolute', width: scale(40), height: scale(40), borderColor: COLORS.primary, borderWidth: 4 },
+  tl: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 20 },
+  tr: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 20 },
+  bl: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 20 },
+  br: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 20 },
+  scanLine: { width: '90%', height: scale(3), backgroundColor: COLORS.primary, shadowColor: COLORS.primary, shadowOpacity: 0.8, shadowRadius: 10, elevation: 15 },
+  scanPrompt: { color: '#fff', fontSize: 14, fontWeight: '700', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 },
 });
 
 export default CreateInvoiceScreen;
