@@ -114,23 +114,25 @@ const ProductsScreen = () => {
     ).start();
   };
 
-  const onBarcodeScanned = async ({ type, data }) => {
-    if (scanned.current || isSearchingAPI) return;
+  const onBarcodeScanned = async (result) => {
+    const { type, data } = result;
+    if (!data || scanned.current || isSearchingAPI) return;
     
-    console.log(`[Scanner] Scanned ${type} with data: ${data}`);
+    console.log(`[Scanner] Detected ${type} | Data: ${data}`);
     scanned.current = true;
     Vibration.vibrate(100);
     setIsSearchingAPI(true);
 
     try {
+      console.log(`[Scanner] Fetching product for barcode: ${data}`);
       const response = await getProductByBarcode(data);
       const { source, product } = response.data;
       
-      console.log(`[Scanner] API Response: source=${source}, product=${product?.name}`);
+      console.log(`[Scanner] Result: source=${source}, name=${product?.name}`);
       
       setIsSearchingAPI(false);
       setIsScanning(false);
-      scanLineAnim.setValue(0); // Reset animation
+      scanLineAnim.setValue(0);
       
       if (source === 'local') {
         Alert.alert('In Stock', `"${product.name}" is already in your inventory.`, [
@@ -140,16 +142,16 @@ const ProductsScreen = () => {
       }
       
       setNewProduct({
-        name: product.name || '',
-        price: product.price ? String(product.price) : '',
+        name: product?.name || '',
+        price: product?.price ? String(product.price) : '',
         stock: '1',
-        hsn: product.hsn || '',
+        hsn: product?.hsn || '',
         barcode: data,
-        unit: product.unit || 'PCS'
+        unit: product?.unit || 'PCS'
       });
       setShowAddModal(true);
     } catch (error) {
-      console.error('[Scanner] Lookup error:', error);
+      console.error('[Scanner] API Error:', error);
       setIsSearchingAPI(false);
       setIsScanning(false);
       setNewProduct({ ...initialProductState, barcode: data });
@@ -199,7 +201,16 @@ const ProductsScreen = () => {
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>Inventory</Text>
-            <TouchableOpacity style={styles.addBtn} onPress={() => handleScan(false)}>
+            <TouchableOpacity 
+              style={styles.addBtn} 
+              onPress={() => {
+                if (!permission?.granted) {
+                  requestPermission();
+                } else {
+                  handleScan(false);
+                }
+              }}
+            >
               <Scan size={24} color="#fff" />
             </TouchableOpacity>
           </View>
