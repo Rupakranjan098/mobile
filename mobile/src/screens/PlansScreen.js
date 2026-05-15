@@ -5,7 +5,7 @@ import { ChevronLeft, Check, Sparkles, Zap, Crown, Rocket, Star } from 'lucide-r
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { getSubscriptionPlans, subscribe } from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
-import { scale, moderateScale } from '../utils/responsive';
+import { scale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 import { useTheme } from '../context/ThemeContext';
 
 const PlansScreen = ({ navigation }) => {
