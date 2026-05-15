@@ -7,7 +7,7 @@ import { scale, verticalScale, moderateScale } from '../utils/responsive';
 import { Platform, StyleSheet, View } from 'react-native';
 
 // Screens
-import DashboardScreen from '../screens/DashboardScreen';
+import HomeNavigator from './HomeNavigator';
 import InvoiceNavigator from './InvoiceNavigator';
 import ProductsScreen from '../screens/ProductsScreen';
 import AIChatScreen from '../screens/AIChatScreen';
@@ -27,7 +27,7 @@ const TabNavigator = ({ onLogout }) => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let IconComponent;
-          if (route.name === 'Dashboard') IconComponent = Home;
+          if (route.name === 'Home') IconComponent = Home;
           else if (route.name === 'Invoices') IconComponent = FileText;
           else if (route.name === 'Products') IconComponent = Package;
           else if (route.name === 'AI Chat') IconComponent = MessageSquare;
@@ -66,7 +66,7 @@ const TabNavigator = ({ onLogout }) => {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Home" component={HomeNavigator} />
       <Tab.Screen name="Invoices" component={InvoiceNavigator} />
       <Tab.Screen name="Products" component={ProductsScreen} />
       <Tab.Screen name="AI Chat" component={AIChatScreen} />
