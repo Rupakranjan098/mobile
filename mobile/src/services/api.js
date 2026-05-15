@@ -97,6 +97,7 @@ export const getDashboardData = () => api.get('/dashboard');
 export const getInvoices = () => api.get('/invoices');
 export const getNextInvoiceNumber = () => api.get('/invoices/next-number');
 export const getProducts = () => api.get('/products');
+export const getProduct = (id) => api.get(`/products/${id}`);
 export const getProductByBarcode = (barcode) => api.get(`/products/barcode/${barcode}`);
 export const createProduct = (data) => api.post('/products', data);
 export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
@@ -106,7 +107,16 @@ export const createExpense = (data) => api.post('/expenses', data);
 export const updateExpense = (id, data) => api.put(`/expenses/${id}`, data);
 export const deleteExpense = (id) => api.delete(`/expenses/${id}`);
 export const getCustomers = () => api.get('/customers');
+export const getCustomer = (id) => api.get(`/customers/${id}`);
+export const createCustomer = (data) => api.post('/customers', data);
+export const updateCustomer = (id, data) => api.put(`/customers/${id}`, data);
+export const deleteCustomer = (id) => api.delete(`/customers/${id}`);
+
 export const createInvoice = (data) => api.post('/invoices', data);
+export const getInvoice = (id) => api.get(`/invoices/${id}`);
+export const updateInvoice = (id, data) => api.put(`/invoices/${id}`, data);
+export const deleteInvoice = (id) => api.delete(`/invoices/${id}`);
+
 export const getReportsData = () => api.get('/reports');
 export const getBusinessProfile = () => api.get('/business-profile');
 export const updateBusinessProfile = (data) => api.put('/business-profile', data);
