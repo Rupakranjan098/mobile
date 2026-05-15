@@ -242,7 +242,7 @@ const DashboardScreen = () => {
           style={[
             styles.floatingAiBtn,
             SHADOW.medium,
-            { bottom: verticalScale(100) }
+            { bottom: verticalScale(150) }
           ]}
           onPress={() => navigation.navigate('AI Chat')}
         >
