@@ -5,6 +5,9 @@ import { Search, FileText, Plus, CheckCircle, Clock, AlertCircle, List, Share2, 
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { getInvoices } from '../services/api';
 import * as WebBrowser from 'expo-web-browser';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import axios from 'axios';
 import { SERVER_URL } from '../config';
 import { scale, moderateScale, verticalScale } from '../utils/responsive';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -75,6 +78,36 @@ const InvoicesScreen = ({ navigation }) => {
     }
   };
 
+  const handleDownloadPDF = async (item) => {
+    try {
+      setLoading(true);
+      const url = `${SERVER_URL}/invoices/${item.id}/print`;
+      
+      // 1. Fetch the HTML from the server
+      const response = await axios.get(url);
+      const htmlContent = response.data;
+
+      // 2. Generate PDF from HTML
+      const { uri } = await Print.printToFileAsync({
+        html: htmlContent,
+        base64: false
+      });
+
+      // 3. Share/Save the PDF
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: `Download Invoice ${item.invoice_number}`,
+        UTI: 'com.adobe.pdf'
+      });
+      
+    } catch (error) {
+      console.error('PDF Generation Error:', error);
+      Alert.alert('Download Failed', 'Could not generate PDF. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleWhatsAppShare = (item) => {
     const url = `${SERVER_URL}/invoices/${item.id}/print`;
     const message = `*ProGst Invoice Sharing*\n\nHello *${item.customer?.name || 'Customer'}*,\n\nYour invoice *${item.invoice_number}* is ready.\n\n*Amount:* ₹ ${parseFloat(item.total_amount).toLocaleString()}\n*Status:* ${item.status}\n\nView/Download Invoice: ${url}\n\nThank you for your business!`;
@@ -134,16 +167,29 @@ const InvoicesScreen = ({ navigation }) => {
         </View>
         <View style={styles.invFooter}>
           <Text style={styles.invDate}>{item.date}</Text>
-          <TouchableOpacity 
-            style={styles.shareIconBtn}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleWhatsAppShare(item);
-            }}
-          >
-            <MessageCircle size={18} color="#22c55e" />
-            <Text style={styles.shareLabel}>Share</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity 
+              style={[styles.shareIconBtn, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleDownloadPDF(item);
+              }}
+            >
+              <FileText size={16} color="#3b82f6" />
+              <Text style={[styles.shareLabel, { color: '#3b82f6' }]}>PDF</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.shareIconBtn}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleWhatsAppShare(item);
+              }}
+            >
+              <MessageCircle size={18} color="#22c55e" />
+              <Text style={styles.shareLabel}>Share</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
