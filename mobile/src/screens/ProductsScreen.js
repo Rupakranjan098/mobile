@@ -126,22 +126,26 @@ const ProductsScreen = () => {
     try {
       const response = await getProductByBarcode(data);
       const { source, product } = response.data;
+      
       setIsSearchingAPI(false);
       setIsScanning(false);
+      
       if (source === 'local') {
-        Alert.alert('In Stock', `"${product.name}" is already in your stock.`);
+        Alert.alert('In Stock', `"${product.name}" is already in your inventory.`);
         return;
       }
+      
       setNewProduct({
         name: product.name || '',
         price: product.price ? String(product.price) : '',
-        stock: '0',
+        stock: '1',
         hsn: product.hsn || '',
         barcode: data,
         unit: product.unit || 'PCS'
       });
       setShowAddModal(true);
     } catch (error) {
+      console.error('Scan lookup error:', error);
       setIsSearchingAPI(false);
       setIsScanning(false);
       setNewProduct({ ...initialProductState, barcode: data });
@@ -300,6 +304,9 @@ const ProductsScreen = () => {
             facing="back"
             enableTorch={isFlashOn}
             onBarcodeScanned={onBarcodeScanned}
+            barcodeScannerSettings={{
+              barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'pdf417'],
+            }}
           />
           <SafeAreaView style={styles.cameraOverlay}>
             <View style={styles.cameraHeader}>
@@ -318,7 +325,9 @@ const ProductsScreen = () => {
               <View style={[styles.scanCorner, styles.br]} />
               <Animated.View style={[styles.scanLine, { transform: [{ translateY: scanLineAnim }] }]} />
             </View>
-            <Text style={styles.scanPrompt}>Align barcode within the frame</Text>
+            <Text style={styles.scanPrompt}>
+              {isSearchingAPI ? 'Searching for product details...' : 'Align barcode within the frame'}
+            </Text>
           </SafeAreaView>
         </View>
       </Modal>
