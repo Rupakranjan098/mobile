@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="en" class="notranslate">
+<head>
+    <meta name="google" content="notranslate">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <style>
         :root {
             --primary: #22c55e;
@@ -199,24 +205,38 @@
         /* Floating Print Button */
         .print-btn {
             position: fixed;
-            bottom: 30px;
+            bottom: 40px;
             right: 30px;
             background: var(--primary);
             color: #fff;
-            width: 60px;
-            height: 60px;
-            border-radius: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 15px 35px rgba(34, 197, 94, 0.5);
             cursor: pointer;
-            z-index: 9999;
+            z-index: 99999;
             border: none;
-            transition: transform 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
         }
-        .print-btn:active { transform: scale(0.9); }
-        .print-btn svg { width: 28px; height: 28px; }
+        .print-btn:active { transform: scale(0.85); box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3); }
+        .print-btn svg { width: 32px; height: 32px; display: block; }
+        
+        /* Glass ripple effect */
+        .print-btn::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 35px;
+            background: rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transition: all 0.5s;
+        }
+        .print-btn:active::after { opacity: 1; transform: scale(0); transition: 0s; }
     </style>
 </head>
 <body>
