@@ -255,6 +255,15 @@ const DashboardScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  mainContainer: { flex: 1, backgroundColor: '#0f172a' },
+  safeArea: { flex: 1 },
+  decorCircle: { position: 'absolute', borderRadius: 999 },
+  container: { flex: 1, padding: 16 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  avatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'rgba(34, 197, 94, 0.3)', overflow: 'hidden' },
+  avatarImg: { width: '100%', height: '100%' },
+  welcomeText: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
   quickActions: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28, gap: 12 },
   actionCard: { flex: 1, height: 80, borderRadius: 20, justifyContent: 'center', alignItems: 'center', gap: 8, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   actionGradient: { ...StyleSheet.absoluteFillObject },
