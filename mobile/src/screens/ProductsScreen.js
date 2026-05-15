@@ -108,8 +108,8 @@ const ProductsScreen = () => {
     setIsScanningFromModal(fromModal || false);
     Animated.loop(
       Animated.sequence([
-        Animated.timing(scanLineAnim, { toValue: 240, duration: 2000, useNativeDriver: true }),
-        Animated.timing(scanLineAnim, { toValue: 0, duration: 2000, useNativeDriver: true })
+        Animated.timing(scanLineAnim, { toValue: 230, duration: 1500, useNativeDriver: true }),
+        Animated.timing(scanLineAnim, { toValue: 0, duration: 1500, useNativeDriver: true })
       ])
     ).start();
   };
@@ -130,6 +130,7 @@ const ProductsScreen = () => {
       
       setIsSearchingAPI(false);
       setIsScanning(false);
+      scanLineAnim.setValue(0); // Reset animation
       
       if (source === 'local') {
         Alert.alert('In Stock', `"${product.name}" is already in your inventory.`, [
@@ -340,14 +341,14 @@ const styles = StyleSheet.create({
   cameraOverlay: { flex: 1, justifyContent: 'space-between', alignItems: 'center', paddingVertical: 40 },
   cameraHeader: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingHorizontal: 24, alignItems: 'center' },
   cameraTitle: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  scanTarget: { width: 250, height: 250, justifyContent: 'center', alignItems: 'center' },
-  scanCorner: { position: 'absolute', width: 40, height: 40, borderColor: COLORS.primary, borderWidth: 4 },
+  scanTarget: { width: scale(250), height: scale(250), justifyContent: 'center', alignItems: 'center' },
+  scanCorner: { position: 'absolute', width: scale(40), height: scale(40), borderColor: COLORS.primary, borderWidth: 4 },
   tl: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 20 },
   tr: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 20 },
   bl: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 20 },
   br: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 20 },
-  scanLine: { width: '90%', height: 2, backgroundColor: COLORS.primary },
-  scanPrompt: { color: '#fff', fontSize: 14, fontWeight: '700', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 },
+  scanLine: { width: '90%', height: scale(3), backgroundColor: COLORS.primary, shadowColor: COLORS.primary, shadowOpacity: 0.8, shadowRadius: 10, elevation: 15 },
+  scanPrompt: { color: '#fff', fontSize: moderateScale(14), fontWeight: '700', backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 },
 });
 
 export default ProductsScreen;
