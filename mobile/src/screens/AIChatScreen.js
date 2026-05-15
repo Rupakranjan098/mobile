@@ -95,7 +95,11 @@ const AIChatScreen = ({ navigation }) => {
           <TouchableOpacity style={[styles.headerAction, { backgroundColor: COLORS.primary + '15' }]}><Sparkles size={20} color={COLORS.primary} /></TouchableOpacity>
         </View>
 
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : null} style={styles.container} keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+          style={styles.container} 
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 25}
+        >
           <ScrollView ref={scrollViewRef} style={styles.chatContainer} contentContainerStyle={styles.chatContent} showsVerticalScrollIndicator={false}>
             {messages.map((msg) => (
               <View key={msg.id} style={[styles.messageWrapper, msg.type === 'user' ? styles.userMessageWrapper : styles.botMessageWrapper]}>
