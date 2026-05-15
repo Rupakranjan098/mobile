@@ -254,6 +254,7 @@ const DashboardScreen = () => {
   );
 };
 
+const styles = StyleSheet.create({
   quickActions: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28, gap: 12 },
   actionCard: { flex: 1, height: 80, borderRadius: 20, justifyContent: 'center', alignItems: 'center', gap: 8, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   actionGradient: { ...StyleSheet.absoluteFillObject },
