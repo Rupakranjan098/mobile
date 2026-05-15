@@ -118,10 +118,12 @@ const SupportCenterScreen = ({ navigation }) => {
                   <Text style={[styles.cardValue, { color: colors.textMuted }]}>{contact.website}</Text>
                 </TouchableOpacity>
 
-                <View style={[styles.contactCard, { backgroundColor: colors.card, borderColor: colors.border, opacity: 0.7 }]}>
+                <View style={[styles.contactCard, styles.fullWidthCard, { backgroundColor: colors.card, borderColor: colors.border, opacity: 0.8 }]}>
                   <View style={[styles.iconBox, { backgroundColor: '#f3e8ff' }]}><Clock size={24} color="#9333ea" /></View>
-                  <Text style={[styles.cardLabel, { color: colors.text }]}>Working Hours</Text>
-                  <Text style={[styles.cardValue, { color: colors.textMuted }]}>{contact.timing}</Text>
+                  <View style={{ marginLeft: 16 }}>
+                    <Text style={[styles.cardLabel, { color: colors.text }]}>Working Hours</Text>
+                    <Text style={[styles.cardValue, { color: colors.textMuted, textAlign: 'left' }]}>{contact.timing}</Text>
+                  </View>
                 </View>
               </View>
 
@@ -160,10 +162,11 @@ const styles = StyleSheet.create({
   contactTitle: { fontSize: 22, fontWeight: '900' },
   contactSubtitle: { fontSize: 14, textAlign: 'center', paddingHorizontal: 40, lineHeight: 20 },
   contactGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12, marginBottom: 30 },
-  contactCard: { width: '48%', padding: 20, borderRadius: 24, borderWidth: 1, alignItems: 'center', gap: 10 },
-  iconBox: { width: 52, height: 52, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  contactCard: { width: '48%', padding: 16, borderRadius: 24, borderWidth: 1, alignItems: 'center', gap: 8 },
+  fullWidthCard: { width: '100%', flexDirection: 'row', justifyContent: 'flex-start', paddingHorizontal: 20 },
+  iconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   cardLabel: { fontSize: 13, fontWeight: '800' },
-  cardValue: { fontSize: 11, fontWeight: '700' },
+  cardValue: { fontSize: 11, fontWeight: '700', textAlign: 'center' },
   chatBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 10 },
   chatGradient: { height: 56, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12 },
   chatBtnText: { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 0.5 },
