@@ -4,6 +4,8 @@ import DashboardScreen from '../screens/DashboardScreen';
 import ReportsScreen from '../screens/ReportsScreen';
 import ExpensesScreen from '../screens/ExpensesScreen';
 import CustomersScreen from '../screens/CustomersScreen';
+import InventoryScreen from '../screens/InventoryScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,6 +16,8 @@ const HomeNavigator = () => {
       <Stack.Screen name="Reports" component={ReportsScreen} />
       <Stack.Screen name="Expenses" component={ExpensesScreen} />
       <Stack.Screen name="Customers" component={CustomersScreen} />
+      <Stack.Screen name="Inventory" component={InventoryScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
     </Stack.Navigator>
   );
 };

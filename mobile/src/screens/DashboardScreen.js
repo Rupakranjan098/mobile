@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TrendingUp, TrendingDown, ChevronRight, Sparkles, Plus, ScanLine, FileBarChart, PieChart, Printer } from 'lucide-react-native';
+import { TrendingUp, TrendingDown, ChevronRight, Sparkles, Plus, ScanLine, FileBarChart, PieChart, Printer, Bell, Box } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import { getDashboardData } from '../services/api';
 import { LineChart } from 'react-native-chart-kit';
@@ -105,6 +105,13 @@ const DashboardScreen = () => {
               </View>
             </View>
             <View style={styles.headerActions}>
+              <TouchableOpacity 
+                style={[styles.headerIconBtn, { backgroundColor: colors.glass, borderColor: colors.border }]}
+                onPress={() => navigation.navigate('Notifications')}
+              >
+                <Bell size={22} color={colors.text} />
+                <View style={styles.unreadDot} />
+              </TouchableOpacity>
               <View style={[styles.avatar, { borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)' }]}>
                 <Image
                   source={{ uri: `https://ui-avatars.com/api/?name=${userName}&background=22c55e&color=fff` }}
@@ -134,6 +141,11 @@ const DashboardScreen = () => {
               <LinearGradient colors={['rgba(244, 63, 94, 0.15)', 'rgba(244, 63, 94, 0.05)']} style={styles.actionGradient} />
               <PieChart size={24} color="#fb7185" />
               <Text style={[styles.actionLabel, { color: colors.text }]}>Expense</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionCard, { borderColor: colors.border }]} onPress={() => navigation.navigate('Inventory')}>
+              <LinearGradient colors={['rgba(245, 158, 11, 0.15)', 'rgba(245, 158, 11, 0.05)']} style={styles.actionGradient} />
+              <Box size={24} color="#f59e0b" />
+              <Text style={[styles.actionLabel, { color: colors.text }]}>Stock</Text>
             </TouchableOpacity>
           </View>
 
@@ -283,9 +295,11 @@ const styles = StyleSheet.create({
   avatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, overflow: 'hidden' },
   avatarImg: { width: '100%', height: '100%' },
   welcomeText: { fontSize: 20, fontWeight: '800' },
-  headerActions: { flexDirection: 'row', alignItems: 'center' },
-  quickActions: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28, gap: 12 },
-  actionCard: { flex: 1, height: 80, borderRadius: 20, justifyContent: 'center', alignItems: 'center', gap: 8, overflow: 'hidden', borderWidth: 1 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerIconBtn: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  unreadDot: { position: 'absolute', top: 12, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 2, borderColor: '#1e293b' },
+  quickActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 28, gap: 10 },
+  actionCard: { width: '18%', height: 75, borderRadius: 18, justifyContent: 'center', alignItems: 'center', gap: 6, overflow: 'hidden', borderWidth: 1 },
   actionGradient: { ...StyleSheet.absoluteFillObject },
   actionLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
   liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239, 68, 68, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
