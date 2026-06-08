@@ -121,6 +121,16 @@ const SupportCenterScreen = ({ navigation }) => {
                 </View>
               </View>
 
+              <TouchableOpacity 
+                style={[styles.chatBtn, { marginBottom: 12 }]} 
+                onPress={() => navigation.navigate('ContactUs')}
+              >
+                <LinearGradient colors={['#3b82f6', '#2563eb']} style={styles.chatGradient}>
+                  <Mail size={20} color="#fff" />
+                  <Text style={styles.chatBtnText}>Send us a Message</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
               <TouchableOpacity style={styles.chatBtn} onPress={() => navigation.navigate('AI Chat')}>
                 <LinearGradient colors={[COLORS.primary, COLORS.primaryDark]} style={styles.chatGradient}>
                   <MessageCircle size={20} color="#fff" />

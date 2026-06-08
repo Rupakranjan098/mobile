@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Tex
 // import * as Notifications from 'expo-notifications'; // Moved to dynamic require to avoid Expo Go warnings
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Moon, Sun, Check } from 'lucide-react-native';
+import { User as UserIcon, Briefcase, Users, RefreshCw, CreditCard, Bell, Settings, HelpCircle, LogOut, ChevronRight, X, Sparkles, Moon, Sun, Check, Mail } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../styles/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SERVER_URL } from '../config';
@@ -200,6 +200,7 @@ const SettingsScreen = ({ navigation, onLogout }) => {
               onClick={() => setThemeModalVisible(true)} 
             />
             <SettingsItem icon={HelpCircle} label="Help & Support Center" color={colors.text} onClick={() => navigation.navigate('SupportCenter')} />
+            <SettingsItem icon={Mail} label="Contact Us Directly" color={colors.text} onClick={() => navigation.navigate('ContactUs')} />
           </View>
 
           <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
